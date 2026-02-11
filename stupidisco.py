@@ -933,14 +933,41 @@ class StupidiscoApp(QMainWindow):
     # -- Hotkey -------------------------------------------------------------
 
     def _init_hotkey(self):
+        self._hotkey_monitor = None
+        if sys.platform == "darwin":
+            self._init_hotkey_macos()
+        else:
+            self._init_hotkey_pynput()
+
+    def _init_hotkey_macos(self):
+        """Use native NSEvent global monitor (avoids pynput crash on macOS 14+)."""
+        try:
+            from AppKit import NSEvent
+
+            NSKeyDownMask = 1 << 10
+            NSCommandKeyMask = 1 << 20
+            NSShiftKeyMask = 1 << 17
+            R_KEYCODE = 15
+
+            def handler(event):
+                flags = event.modifierFlags()
+                if (flags & NSCommandKeyMask) and (flags & NSShiftKeyMask) and event.keyCode() == R_KEYCODE:
+                    QTimer.singleShot(0, self._toggle_recording)
+
+            self._hotkey_monitor = NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(
+                NSKeyDownMask, handler
+            )
+            log.info("Hotkey registered: Cmd+Shift+R (NSEvent)")
+        except Exception as e:
+            log.warning(f"Could not register macOS hotkey: {e}")
+            self._init_hotkey_pynput()
+
+    def _init_hotkey_pynput(self):
+        """Fallback using pynput for non-macOS platforms."""
         try:
             from pynput.keyboard import GlobalHotKeys
 
-            if sys.platform == "darwin":
-                hotkey_str = "<cmd>+<shift>+r"
-            else:
-                hotkey_str = "<ctrl>+<shift>+r"
-
+            hotkey_str = "<ctrl>+<shift>+r"
             self._hotkey_listener = GlobalHotKeys(
                 {hotkey_str: self._hotkey_triggered}
             )
@@ -951,7 +978,6 @@ class StupidiscoApp(QMainWindow):
             log.warning(f"Could not register hotkey: {e}")
 
     def _hotkey_triggered(self):
-        # pynput callback runs in a different thread — use QTimer for thread safety
         QTimer.singleShot(0, self._toggle_recording)
 
     # -- Pulse animation ----------------------------------------------------
@@ -1116,7 +1142,11 @@ class StupidiscoApp(QMainWindow):
         self._thread.quit()
         self._thread.wait(3000)
         try:
-            self._hotkey_listener.stop()
+            if self._hotkey_monitor:
+                from AppKit import NSEvent
+                NSEvent.removeMonitor_(self._hotkey_monitor)
+            elif hasattr(self, '_hotkey_listener'):
+                self._hotkey_listener.stop()
         except Exception:
             pass
         event.accept()
