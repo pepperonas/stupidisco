@@ -7,6 +7,10 @@
 
 # stupidisco
 
+<p align="center">
+  <img src="screenshot.png" alt="stupidisco Screenshot" width="340">
+</p>
+
 Echtzeit-Interview-Assistent als Overlay für macOS. Erfasst gesprochene Fragen aus Videocalls (Google Meet, Teams, Zoom) per Mikrofon, transkribiert sie live und generiert kompakte deutsche Antworten — angezeigt in einem kleinen Always-on-Top-Overlay-Fenster.
 
 ## Features
