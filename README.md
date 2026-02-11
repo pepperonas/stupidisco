@@ -168,6 +168,10 @@ Die App loggt Latenz-Metriken in die Konsole:
 - Zeit bis zum ersten Antwort-Chunk
 - Zeit bis zur vollständigen Antwort
 
+## Entwickler
+
+**Martin Pfeffer** — [celox.io](https://celox.io)
+
 ## Lizenz
 
 MIT
