@@ -9,31 +9,63 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-latest
-            artifact: stupidisco-macos.zip
-            pyinstaller_args: --onefile --windowed --icon icon.icns --add-data "icon.png:."
-            package_cmd: cd dist && zip -r ../stupidisco-macos.zip stupidisco
-          - os: windows-latest
-            artifact: stupidisco-windows.zip
-            pyinstaller_args: --onefile --windowed --icon icon.png --add-data "icon.png;."
-            package_cmd: Compress-Archive -Path dist\stupidisco.exe -DestinationPath stupidisco-windows.zip
-          - os: ubuntu-latest
-            artifact: stupidisco-linux.tar.gz
-            pyinstaller_args: --onefile --add-data "icon.png:."
-            package_cmd: cd dist && tar czf ../stupidisco-linux.tar.gz stupidisco
-
-    runs-on: ${{ matrix.os }}
-
+  build-macos:
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: System deps (Linux)
-        if: runner.os == 'Linux'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - run: pip install -r requirements.txt
+      - run: pip install pyinstaller
+
+      - name: Build with PyInstaller (.spec)
+        run: pyinstaller stupidisco.spec
+
+      - name: Sign and package
+        run: |
+          xattr -r -d com.apple.quarantine dist/stupidisco.app
+          codesign --force --deep --sign - dist/stupidisco.app
+          cd dist && zip -r ../stupidisco-macos-arm64.zip stupidisco.app
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stupidisco-macos-arm64.zip
+          path: stupidisco-macos-arm64.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - run: pip install -r requirements.txt
+      - run: pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller --onefile --windowed --icon icon.png --add-data "icon.png;." --name stupidisco stupidisco.py
+
+      - name: Package
+        run: Compress-Archive -Path dist\stupidisco.exe -DestinationPath stupidisco-windows-x64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stupidisco-windows-x64.zip
+          path: stupidisco-windows-x64.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: System deps
         run: |
           sudo apt-get update
           sudo apt-get install -y libportaudio2 libasound2-dev \
@@ -48,20 +80,19 @@ jobs:
       - run: pip install pyinstaller
 
       - name: Build with PyInstaller
-        run: pyinstaller ${{ matrix.pyinstaller_args }} --name stupidisco stupidisco.py
+        run: pyinstaller --onefile --add-data "icon.png:." --name stupidisco stupidisco.py
 
       - name: Package
-        run: ${{ matrix.package_cmd }}
-        shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
+        run: cd dist && tar czf ../stupidisco-linux-x64.tar.gz stupidisco
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
-          path: ${{ matrix.artifact }}
+          name: stupidisco-linux-x64.tar.gz
+          path: stupidisco-linux-x64.tar.gz
 
   release:
-    needs: build
+    needs: [build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts

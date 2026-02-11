@@ -884,12 +884,32 @@ class StupidiscoApp(QMainWindow):
         action_row.addWidget(self._regen_btn)
         layout.addLayout(action_row)
 
-        # Resize grip hint
+        # Footer: version + link + resize grip
+        layout.addStretch()
+        footer_row = QHBoxLayout()
+        footer_row.setContentsMargins(0, 0, 0, 0)
+        footer_row.setSpacing(6)
+
+        version_label = QLabel(f"v{__version__}")
+        version_label.setStyleSheet("color: rgba(255,255,255,25); font-size: 10px;")
+
+        sep_label = QLabel("\u00b7")
+        sep_label.setStyleSheet("color: rgba(255,255,255,20); font-size: 10px;")
+
+        link_label = QLabel('<a href="https://celox.io" style="color: rgba(52,199,89,120); text-decoration: none; font-size: 10px;">celox.io</a>')
+        link_label.setOpenExternalLinks(True)
+        link_label.setCursor(Qt.CursorShape.PointingHandCursor)
+
         grip = QLabel("\u25e2")
         grip.setStyleSheet("color: rgba(255,255,255,20); font-size: 14px;")
         grip.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
-        layout.addStretch()
-        layout.addWidget(grip)
+
+        footer_row.addWidget(version_label)
+        footer_row.addWidget(sep_label)
+        footer_row.addWidget(link_label)
+        footer_row.addStretch()
+        footer_row.addWidget(grip)
+        layout.addLayout(footer_row)
 
         # Position at right side of screen
         screen = QGuiApplication.primaryScreen()

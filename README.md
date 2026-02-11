@@ -12,9 +12,15 @@
   <img src="screenshot.png" alt="stupidisco Screenshot" width="340">
 </p>
 
+**[Deutsch](#deutsch)** | **[English](#english)**
+
+---
+
+## Deutsch
+
 Echtzeit-Interview-Assistent als Overlay für macOS, Windows und Linux. Erfasst gesprochene Fragen aus Videocalls (Google Meet, Teams, Zoom) per Mikrofon, transkribiert sie live und generiert kompakte deutsche Antworten — angezeigt in einem kleinen Always-on-Top-Overlay-Fenster.
 
-## Features
+### Features
 
 - **Live-Transkription** — Deepgram Streaming-STT mit deutscher Sprachunterstützung (nova-3 Modell)
 - **KI-Antworten** — Claude generiert prägnante Antworten in 2–3 Sätzen auf Deutsch, in Echtzeit gestreamt
@@ -27,20 +33,18 @@ Echtzeit-Interview-Assistent als Overlay für macOS, Windows und Linux. Erfasst 
 - **Session-Logging** — Alle Frage-Antwort-Paare werden in `~/.stupidisco/sessions/` gespeichert
 - **Latenz-Logging** — Misst die Zeit von Stop-Klick bis zur ersten/vollständigen Antwort
 
-## Download
+### Download
 
-Fertige Binaries fuer macOS, Windows und Linux gibt es auf der [Releases-Seite](https://github.com/pepperonas/stupidisco/releases).
+Fertige Binaries für macOS, Windows und Linux gibt es auf der [Releases-Seite](https://github.com/pepperonas/stupidisco/releases).
 
-> **Hinweis:** Auch bei Nutzung des fertigen Binaries wird eine `.env`-Datei mit `DEEPGRAM_API_KEY` und `ANTHROPIC_API_KEY` im selben Verzeichnis benoetigt.
-
-## Voraussetzungen
+### Voraussetzungen
 
 - Python 3.10+ (getestet mit Python 3.14)
 - macOS, Windows oder Linux
 - [Deepgram API-Key](https://console.deepgram.com/) (kostenlose Stufe mit $200 Guthaben)
 - [Anthropic API-Key](https://console.anthropic.com/)
 
-## Installation
+### Installation
 
 ```bash
 git clone https://github.com/pepperonas/stupidisco.git
@@ -58,7 +62,7 @@ cp .env.example .env
 # .env bearbeiten und Keys eintragen
 ```
 
-## Nutzung
+### Nutzung
 
 ```bash
 python stupidisco.py
@@ -74,7 +78,7 @@ python stupidisco.py
 
 > **macOS:** Beim ersten Start Mikrofonberechtigung für Terminal/IDE erteilen, wenn die Abfrage erscheint.
 
-## Funktionsweise
+### Funktionsweise
 
 ```
 ┌─────────────┐     ┌──────────┐     ┌─────────┐
@@ -91,67 +95,7 @@ python stupidisco.py
                           └───────────────────────┘
 ```
 
-### Architektur
-
-Die App nutzt eine Multi-Thread-Architektur, um die GUI reaktionsfähig zu halten, während Echtzeit-Audio-Streaming und API-Aufrufe parallel laufen:
-
-- **Main Thread** — PyQt6 Event Loop, GUI-Rendering, Hotkey-Handling via pynput
-- **Recording Thread** — Öffnet Deepgram-WebSocket (sync SDK v5), erfasst Audio via `sounddevice`, sendet Chunks direkt an Deepgram via `send_media()`
-- **Listener Thread** — Führt Deepgrams blockierende `start_listening()` Recv-Schleife aus, sendet Transkript-Signale zurück an die GUI
-- **Async Worker Thread** — Dedizierter asyncio Event Loop für Claude Streaming-API (`messages.stream()`)
-
-Die Kommunikation zwischen Threads erfolgt über Qt Signals/Slots, die thread-sicher sind.
-
-### Threading-Modell
-
-```
-Main Thread (Qt)
-  ├── GUI-Updates via Signals/Slots
-  └── Hotkey-Listener (pynput, Daemon-Thread)
-
-Recording Thread (pro Session)
-  ├── Deepgram WebSocket Connect (sync)
-  ├── sounddevice Audio-Callback → send_media()
-  └── Listener Thread
-       └── socket.start_listening() (blockierende Recv-Schleife)
-
-Async Worker Thread
-  └── asyncio Event Loop
-       └── Claude Streaming (anthropic SDK)
-```
-
-### Warum dieses Design?
-
-- **Deepgram SDK v5** nutzt eine synchrone WebSocket-API, bei der `start_listening()` blockiert. Das erfordert einen eigenen Thread
-- **sounddevice** führt seinen Audio-Callback in einem PortAudio-Thread aus — Bytes werden direkt an Deepgram gesendet (kein Queue-Overhead)
-- **Claudes Python SDK** ist asynchron — es braucht einen asyncio Event Loop, der im QThread-Worker lebt
-- **PyQt6** kann die GUI nur vom Main Thread aus aktualisieren — Signals/Slots übernehmen die thread-sichere Kommunikation
-
-## GUI
-
-Das Overlay-Fenster bietet:
-
-- **Traffic-Light-Buttons** (oben links) — Schließen (rot), Minimieren (gelb), Maximieren (grün)
-- **Größenveränderbar** — Untere rechte Ecke ziehen zum Vergrößern/Verkleinern (Minimum 320x460)
-- **Verschiebbar** — Überall sonst ziehen, um das Fenster zu bewegen
-- **Geräte-Dropdown** — Eingabemikrofon auswählen
-- **Mic-Button** — Großer runder Toggle mit pulsierender roter Animation während der Aufnahme
-- **Transkript-Bereich** — Live-aktualisierter scrollbarer Text, der zeigt, was Deepgram erkennt
-- **Antwort-Bereich** — Grüner Text, der Token für Token von Claude gestreamt wird
-- **Kopieren / Regenerieren** — Aktionsbuttons unter der Antwort
-
-## Tech Stack
-
-| Komponente | Technologie |
-|-----------|-----------|
-| GUI | PyQt6 (Dark Theme, rahmenlos, größenveränderbar) |
-| STT | Deepgram Streaming API (SDK v5, nova-3, Deutsch) |
-| KI | Anthropic Claude (claude-3-5-haiku, Streaming) |
-| Audio | sounddevice (PortAudio, 16kHz Mono int16) |
-| Hotkey | pynput (GlobalHotKeys) |
-| Config | python-dotenv |
-
-## Konfiguration
+### Konfiguration
 
 Alle Einstellungen befinden sich in `.env`:
 
@@ -167,28 +111,134 @@ Das Claude-Modell und der System-Prompt können durch Bearbeiten der Konstanten 
 - `SAMPLE_RATE` — Audio-Abtastrate (Standard: 16000)
 - `CHUNK_MS` — Audio-Chunk-Größe in ms (Standard: 100)
 
-## Session-Logs
+### Session-Logs
 
 Alle Frage-Antwort-Paare werden automatisch in `~/.stupidisco/sessions/` als Textdateien gespeichert, benannt nach Zeitstempel (z.B. `2025-02-11_23-08.txt`). Jeder Eintrag enthält Fragennummer, Zeitstempel, Transkript und generierte Antwort.
 
-## Ziel-Latenz
+---
 
-< 2–3 Sekunden von Stop-Klick bis zur vollständigen Antwortanzeige.
+## English
 
-Die App loggt Latenz-Metriken in die Konsole:
-- Zeit bis zum ersten Antwort-Chunk
-- Zeit bis zur vollständigen Antwort
+Real-time interview assistant overlay for macOS, Windows and Linux. Captures spoken questions from video calls (Google Meet, Teams, Zoom) via microphone, transcribes them live and generates compact German answers — displayed in a small always-on-top overlay window.
 
-## Entwickler
+### Features
+
+- **Live transcription** — Deepgram streaming STT with German language support (nova-3 model)
+- **AI answers** — Claude generates concise answers in 2–3 sentences in German, streamed in real-time
+- **Always-on-top overlay** — Dark frameless window, draggable and resizable
+- **Window controls** — macOS-style traffic light buttons (close, minimize, maximize)
+- **Hotkey support** — `Cmd+Shift+R` (macOS) / `Ctrl+Shift+R` (Windows/Linux) to toggle recording
+- **Device selection** — Any connected microphone selectable via dropdown
+- **Copy button** — Copy generated answer to clipboard with one click
+- **Regenerate** — Re-generate answer with the same transcript
+- **Session logging** — All Q&A pairs saved to `~/.stupidisco/sessions/`
+- **Latency logging** — Measures time from stop click to first/full answer
+
+### Download
+
+Pre-built binaries for macOS, Windows and Linux are available on the [Releases page](https://github.com/pepperonas/stupidisco/releases).
+
+### Requirements
+
+- Python 3.10+ (tested with Python 3.14)
+- macOS, Windows or Linux
+- [Deepgram API key](https://console.deepgram.com/) (free tier with $200 credit)
+- [Anthropic API key](https://console.anthropic.com/)
+
+### Installation
+
+```bash
+git clone https://github.com/pepperonas/stupidisco.git
+cd stupidisco
+
+# Create virtual environment (recommended)
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure API keys
+cp .env.example .env
+# Edit .env and enter your keys
+```
+
+### Usage
+
+```bash
+python stupidisco.py
+```
+
+1. Select microphone from dropdown (or use default)
+2. Click mic button or press `Cmd+Shift+R` to start recording
+3. Speak your question in German
+4. Click again or press hotkey to stop — the answer streams within seconds
+5. Use **Copy** to grab the answer, or **Regenerate** for a new one
+
+> **Tip:** Use a headset microphone to reduce echo from speakers during video calls.
+
+> **macOS:** Grant microphone permission for Terminal/IDE when prompted on first launch.
+
+### How it works
+
+```
+┌─────────────┐     ┌──────────┐     ┌─────────┐
+│  Microphone  │────>│ Deepgram │────>│  Claude  │
+│  (16kHz)     │     │ (STT)    │     │ (Answer) │
+└─────────────┘     └──────────┘     └─────────┘
+       │                  │                │
+       └──── Audio ───────┘                │
+              Chunks         Transcript    │
+                                │          │
+                          ┌─────v──────────v─────┐
+                          │   PyQt6 Overlay GUI   │
+                          │  (Always-on-Top)      │
+                          └───────────────────────┘
+```
+
+### Configuration
+
+All settings are in `.env`:
+
+```bash
+DEEPGRAM_API_KEY=your_deepgram_api_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
+```
+
+The Claude model and system prompt can be changed by editing the constants at the top of `stupidisco.py`:
+
+- `CLAUDE_MODEL` — Default: `claude-3-5-haiku-20241022`
+- `SYSTEM_PROMPT` — Instructions for answer generation
+- `SAMPLE_RATE` — Audio sample rate (default: 16000)
+- `CHUNK_MS` — Audio chunk size in ms (default: 100)
+
+### Session Logs
+
+All Q&A pairs are automatically saved to `~/.stupidisco/sessions/` as text files, named by timestamp (e.g. `2025-02-11_23-08.txt`). Each entry contains question number, timestamp, transcript and generated answer.
+
+---
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| GUI | PyQt6 (dark theme, frameless, resizable) |
+| STT | Deepgram Streaming API (SDK v5, nova-3, German) |
+| AI | Anthropic Claude (claude-3-5-haiku, streaming) |
+| Audio | sounddevice (PortAudio, 16kHz mono int16) |
+| Hotkey | pynput (GlobalHotKeys) |
+| Config | python-dotenv |
+
+## Developer
 
 **Martin Pfeffer** — [celox.io](https://celox.io)
 
-## Lizenz
+## License / Lizenz
 
 MIT
 
 ---
 
-Benannt nach [Stupidisco](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1) von Junior Jack.
+Named after / Benannt nach [Stupidisco](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1) by Junior Jack.
 
 [![Stupidisco](https://img.youtube.com/vi/GJfydUI2Hzs/0.jpg)](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1)
