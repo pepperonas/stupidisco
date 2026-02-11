@@ -22,25 +22,23 @@ Echtzeit-Interview-Assistent als Overlay für macOS, Windows und Linux. Erfasst 
 
 ### Features
 
-- **Live-Transkription** — Deepgram Streaming-STT mit deutscher Sprachunterstützung (nova-3 Modell)
-- **KI-Antworten** — Claude generiert prägnante Antworten in 2–3 Sätzen auf Deutsch, in Echtzeit gestreamt
+- **Live-Transkription** — Deepgram Streaming-STT (nova-3 Modell, Deutsch)
+- **KI-Antworten** — Claude generiert prägnante Antworten in 2–3 Sätzen, in Echtzeit gestreamt
 - **Always-on-Top-Overlay** — Dunkles rahmenloses Fenster, verschieb- und größenveränderbar
 - **Fenstersteuerung** — macOS-Style Traffic-Light-Buttons (Schließen, Minimieren, Maximieren)
-- **Hotkey-Unterstützung** — `Cmd+Shift+R` (macOS) / `Ctrl+Shift+R` (Windows/Linux) zum Umschalten der Aufnahme
-- **Geräteauswahl** — Jedes angeschlossene Mikrofon per Dropdown wählbar
-- **Kopieren-Button** — Generierte Antwort mit einem Klick in die Zwischenablage kopieren
-- **Regenerieren** — Antwort mit demselben Transkript neu generieren
-- **Session-Logging** — Alle Frage-Antwort-Paare werden in `~/.stupidisco/sessions/` gespeichert
-- **Latenz-Logging** — Misst die Zeit von Stop-Klick bis zur ersten/vollständigen Antwort
+- **Hotkey** — `Cmd+Shift+R` (macOS) / `Ctrl+Shift+R` (Windows/Linux)
+- **Geräteauswahl** — Mikrofon per Dropdown wählbar
+- **Kopieren & Regenerieren** — Antwort in die Zwischenablage kopieren oder neu generieren
+- **API-Key-Dialog** — Beim ersten Start werden die Keys per Dialog abgefragt und in `~/.stupidisco/.env` gespeichert
+- **Session-Logging** — Frage-Antwort-Paare in `~/.stupidisco/sessions/`
 
 ### Download
 
-Fertige Binaries für macOS, Windows und Linux gibt es auf der [Releases-Seite](https://github.com/pepperonas/stupidisco/releases).
+Fertige Binaries für macOS (arm64), Windows (x64) und Linux (x64) gibt es auf der [Releases-Seite](https://github.com/pepperonas/stupidisco/releases).
 
 ### Voraussetzungen
 
-- Python 3.10+ (getestet mit Python 3.14)
-- macOS, Windows oder Linux
+- Python 3.10+
 - [Deepgram API-Key](https://console.deepgram.com/) (kostenlose Stufe mit $200 Guthaben)
 - [Anthropic API-Key](https://console.anthropic.com/)
 
@@ -49,17 +47,8 @@ Fertige Binaries für macOS, Windows und Linux gibt es auf der [Releases-Seite](
 ```bash
 git clone https://github.com/pepperonas/stupidisco.git
 cd stupidisco
-
-# Virtuelle Umgebung erstellen (empfohlen)
-python3 -m venv venv
-source venv/bin/activate
-
-# Abhängigkeiten installieren
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-
-# API-Keys konfigurieren
-cp .env.example .env
-# .env bearbeiten und Keys eintragen
 ```
 
 ### Nutzung
@@ -69,51 +58,38 @@ python stupidisco.py
 ```
 
 1. Mikrofon aus dem Dropdown wählen (oder Standard verwenden)
-2. Mic-Button klicken oder `Cmd+Shift+R` drücken, um die Aufnahme zu starten
-3. Frage auf Deutsch sprechen
-4. Erneut klicken oder Hotkey drücken zum Stoppen — die Antwort streamt innerhalb von Sekunden
-5. **Kopieren** nutzen, um die Antwort zu übernehmen, oder **Regenerieren** für eine neue
+2. Mic-Button klicken oder Hotkey drücken — Aufnahme startet
+3. Frage sprechen
+4. Erneut klicken/Hotkey — Antwort streamt innerhalb von Sekunden
+5. **Kopieren** oder **Regenerieren**
 
-> **Tipp:** Ein Headset-Mikrofon verwenden, um Echo von Lautsprechern während Videocalls zu reduzieren.
+> **Tipp:** Headset-Mikrofon verwenden, um Echo zu reduzieren.
 
-> **macOS:** Beim ersten Start Mikrofonberechtigung für Terminal/IDE erteilen, wenn die Abfrage erscheint.
+> **macOS:** Beim ersten Start Mikrofonberechtigung erteilen.
 
 ### Funktionsweise
 
 ```
-┌─────────────┐     ┌──────────┐     ┌─────────┐
-│  Mikrofon    │────>│ Deepgram │────>│  Claude  │
-│  (16kHz)     │     │ (STT)    │     │ (Antwort)│
-└─────────────┘     └──────────┘     └─────────┘
-       │                  │                │
-       └──── Audio ───────┘                │
-              Chunks         Transkript    │
-                                │          │
-                          ┌─────v──────────v─────┐
-                          │   PyQt6 Overlay-GUI   │
-                          │  (Always-on-Top)      │
-                          └───────────────────────┘
+Mikrofon ──> Deepgram (STT) ──> Claude (Antwort)
+   │              │                    │
+   └── Audio ─────┘                    │
+       Chunks        Transkript        │
+                          │            │
+                    ┌─────v────────────v─────┐
+                    │   PyQt6 Overlay (AOT)  │
+                    └────────────────────────┘
 ```
 
 ### Konfiguration
 
-Alle Einstellungen befinden sich in `.env`:
+API-Keys werden beim ersten Start per Dialog abgefragt. Alternativ `.env` im Projektverzeichnis:
 
 ```bash
-DEEPGRAM_API_KEY=dein_deepgram_api_key
-ANTHROPIC_API_KEY=dein_anthropic_api_key
+DEEPGRAM_API_KEY=dein_key
+ANTHROPIC_API_KEY=dein_key
 ```
 
-Das Claude-Modell und der System-Prompt können durch Bearbeiten der Konstanten am Anfang von `stupidisco.py` geändert werden:
-
-- `CLAUDE_MODEL` — Standard: `claude-3-5-haiku-20241022`
-- `SYSTEM_PROMPT` — Anweisungen für die Antwortgenerierung
-- `SAMPLE_RATE` — Audio-Abtastrate (Standard: 16000)
-- `CHUNK_MS` — Audio-Chunk-Größe in ms (Standard: 100)
-
-### Session-Logs
-
-Alle Frage-Antwort-Paare werden automatisch in `~/.stupidisco/sessions/` als Textdateien gespeichert, benannt nach Zeitstempel (z.B. `2025-02-11_23-08.txt`). Jeder Eintrag enthält Fragennummer, Zeitstempel, Transkript und generierte Antwort.
+Weitere Konstanten in `stupidisco.py`: `CLAUDE_MODEL`, `SYSTEM_PROMPT`, `SAMPLE_RATE`, `CHUNK_MS`.
 
 ---
 
@@ -123,25 +99,23 @@ Real-time interview assistant overlay for macOS, Windows and Linux. Captures spo
 
 ### Features
 
-- **Live transcription** — Deepgram streaming STT with German language support (nova-3 model)
-- **AI answers** — Claude generates concise answers in 2–3 sentences in German, streamed in real-time
+- **Live transcription** — Deepgram streaming STT (nova-3 model, German)
+- **AI answers** — Claude generates concise answers in 2–3 sentences, streamed in real-time
 - **Always-on-top overlay** — Dark frameless window, draggable and resizable
 - **Window controls** — macOS-style traffic light buttons (close, minimize, maximize)
-- **Hotkey support** — `Cmd+Shift+R` (macOS) / `Ctrl+Shift+R` (Windows/Linux) to toggle recording
+- **Hotkey** — `Cmd+Shift+R` (macOS) / `Ctrl+Shift+R` (Windows/Linux)
 - **Device selection** — Any connected microphone selectable via dropdown
-- **Copy button** — Copy generated answer to clipboard with one click
-- **Regenerate** — Re-generate answer with the same transcript
-- **Session logging** — All Q&A pairs saved to `~/.stupidisco/sessions/`
-- **Latency logging** — Measures time from stop click to first/full answer
+- **Copy & Regenerate** — Copy answer to clipboard or re-generate
+- **API key dialog** — On first launch, prompts for keys and saves them to `~/.stupidisco/.env`
+- **Session logging** — Q&A pairs saved to `~/.stupidisco/sessions/`
 
 ### Download
 
-Pre-built binaries for macOS, Windows and Linux are available on the [Releases page](https://github.com/pepperonas/stupidisco/releases).
+Pre-built binaries for macOS (arm64), Windows (x64) and Linux (x64) are available on the [Releases page](https://github.com/pepperonas/stupidisco/releases).
 
 ### Requirements
 
-- Python 3.10+ (tested with Python 3.14)
-- macOS, Windows or Linux
+- Python 3.10+
 - [Deepgram API key](https://console.deepgram.com/) (free tier with $200 credit)
 - [Anthropic API key](https://console.anthropic.com/)
 
@@ -150,17 +124,8 @@ Pre-built binaries for macOS, Windows and Linux are available on the [Releases p
 ```bash
 git clone https://github.com/pepperonas/stupidisco.git
 cd stupidisco
-
-# Create virtual environment (recommended)
-python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-
-# Configure API keys
-cp .env.example .env
-# Edit .env and enter your keys
 ```
 
 ### Usage
@@ -170,51 +135,38 @@ python stupidisco.py
 ```
 
 1. Select microphone from dropdown (or use default)
-2. Click mic button or press `Cmd+Shift+R` to start recording
-3. Speak your question in German
-4. Click again or press hotkey to stop — the answer streams within seconds
-5. Use **Copy** to grab the answer, or **Regenerate** for a new one
+2. Click mic button or press hotkey — recording starts
+3. Speak your question
+4. Click again / hotkey — answer streams within seconds
+5. **Copy** or **Regenerate**
 
-> **Tip:** Use a headset microphone to reduce echo from speakers during video calls.
+> **Tip:** Use a headset microphone to reduce echo from speakers.
 
-> **macOS:** Grant microphone permission for Terminal/IDE when prompted on first launch.
+> **macOS:** Grant microphone permission when prompted on first launch.
 
 ### How it works
 
 ```
-┌─────────────┐     ┌──────────┐     ┌─────────┐
-│  Microphone  │────>│ Deepgram │────>│  Claude  │
-│  (16kHz)     │     │ (STT)    │     │ (Answer) │
-└─────────────┘     └──────────┘     └─────────┘
-       │                  │                │
-       └──── Audio ───────┘                │
-              Chunks         Transcript    │
-                                │          │
-                          ┌─────v──────────v─────┐
-                          │   PyQt6 Overlay GUI   │
-                          │  (Always-on-Top)      │
-                          └───────────────────────┘
+Microphone ──> Deepgram (STT) ──> Claude (Answer)
+   │                │                    │
+   └── Audio ───────┘                    │
+       Chunks          Transcript        │
+                           │             │
+                     ┌─────v─────────────v─────┐
+                     │   PyQt6 Overlay (AOT)   │
+                     └─────────────────────────┘
 ```
 
 ### Configuration
 
-All settings are in `.env`:
+API keys are prompted on first launch via dialog. Alternatively, create `.env` in the project directory:
 
 ```bash
-DEEPGRAM_API_KEY=your_deepgram_api_key
-ANTHROPIC_API_KEY=your_anthropic_api_key
+DEEPGRAM_API_KEY=your_key
+ANTHROPIC_API_KEY=your_key
 ```
 
-The Claude model and system prompt can be changed by editing the constants at the top of `stupidisco.py`:
-
-- `CLAUDE_MODEL` — Default: `claude-3-5-haiku-20241022`
-- `SYSTEM_PROMPT` — Instructions for answer generation
-- `SAMPLE_RATE` — Audio sample rate (default: 16000)
-- `CHUNK_MS` — Audio chunk size in ms (default: 100)
-
-### Session Logs
-
-All Q&A pairs are automatically saved to `~/.stupidisco/sessions/` as text files, named by timestamp (e.g. `2025-02-11_23-08.txt`). Each entry contains question number, timestamp, transcript and generated answer.
+Additional constants in `stupidisco.py`: `CLAUDE_MODEL`, `SYSTEM_PROMPT`, `SAMPLE_RATE`, `CHUNK_MS`.
 
 ---
 
@@ -226,7 +178,7 @@ All Q&A pairs are automatically saved to `~/.stupidisco/sessions/` as text files
 | STT | Deepgram Streaming API (SDK v5, nova-3, German) |
 | AI | Anthropic Claude (claude-3-5-haiku, streaming) |
 | Audio | sounddevice (PortAudio, 16kHz mono int16) |
-| Hotkey | pynput (GlobalHotKeys) |
+| Hotkey | NSEvent (macOS) / pynput (Windows/Linux) |
 | Config | python-dotenv |
 
 ## Developer

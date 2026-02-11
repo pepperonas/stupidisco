@@ -18,7 +18,7 @@ Setup:
     3. Tip: Use a headset mic to reduce echo from speakers
 """
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 import asyncio
 import logging
@@ -891,12 +891,12 @@ class StupidiscoApp(QMainWindow):
         footer_row.setSpacing(6)
 
         version_label = QLabel(f"v{__version__}")
-        version_label.setStyleSheet("color: rgba(255,255,255,25); font-size: 10px;")
+        version_label.setStyleSheet("color: rgba(255,255,255,90); font-size: 10px;")
 
         sep_label = QLabel("\u00b7")
-        sep_label.setStyleSheet("color: rgba(255,255,255,20); font-size: 10px;")
+        sep_label.setStyleSheet("color: rgba(255,255,255,60); font-size: 10px;")
 
-        link_label = QLabel('<a href="https://celox.io" style="color: rgba(52,199,89,120); text-decoration: none; font-size: 10px;">celox.io</a>')
+        link_label = QLabel('<a href="https://celox.io" style="color: rgba(52,199,89,180); text-decoration: none; font-size: 10px;">celox.io</a>')
         link_label.setOpenExternalLinks(True)
         link_label.setCursor(Qt.CursorShape.PointingHandCursor)
 
