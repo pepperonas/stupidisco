@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stupidisco"
+version = "0.0.1"
+description = "Real-time interview assistant overlay — live transcription with Deepgram, AI answers with Claude"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "Martin Pfeffer"}]
+keywords = ["interview", "assistant", "overlay", "transcription", "deepgram", "claude", "pyqt6"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "PyQt6>=6.6.0",
+    "sounddevice>=0.4.6",
+    "numpy>=1.24.0",
+    "python-dotenv>=1.0.0",
+    "anthropic>=0.39.0",
+    "deepgram-sdk>=3.7.0",
+    "pynput>=1.7.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0.0", "pyinstaller>=6.0.0"]
+
+[project.urls]
+Homepage = "https://github.com/pepperonas/stupidisco"
+Repository = "https://github.com/pepperonas/stupidisco"
+
+[tool.pytest.ini_options]
+testpaths = ["."]

@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: stupidisco-macos.zip
+            pyinstaller_args: --onefile --windowed --icon icon.icns --add-data "icon.png:."
+            package_cmd: cd dist && zip -r ../stupidisco-macos.zip stupidisco
+          - os: windows-latest
+            artifact: stupidisco-windows.zip
+            pyinstaller_args: --onefile --windowed --icon icon.png --add-data "icon.png;."
+            package_cmd: Compress-Archive -Path dist\stupidisco.exe -DestinationPath stupidisco-windows.zip
+          - os: ubuntu-latest
+            artifact: stupidisco-linux.tar.gz
+            pyinstaller_args: --onefile --add-data "icon.png:."
+            package_cmd: cd dist && tar czf ../stupidisco-linux.tar.gz stupidisco
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: System deps (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libportaudio2 libasound2-dev \
+            libxkbcommon-x11-0 libegl1 libxcb-xinerama0 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - run: pip install -r requirements.txt
+      - run: pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller ${{ matrix.pyinstaller_args }} --name stupidisco stupidisco.py
+
+      - name: Package
+        run: ${{ matrix.package_cmd }}
+        shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: artifacts/*

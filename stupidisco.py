@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-stupidisco — Real-time Interview Assistant Overlay for macOS
+stupidisco — Real-time Interview Assistant Overlay
 
 Captures spoken questions from video calls via microphone, transcribes them
 live with Deepgram, and generates compact German answers with Claude.
@@ -17,6 +17,8 @@ Setup:
     2. On macOS, grant microphone permission when prompted
     3. Tip: Use a headset mic to reduce echo from speakers
 """
+
+__version__ = "0.0.1"
 
 import asyncio
 import logging
@@ -52,6 +54,16 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+
+def _resource_path(relative_path: str) -> Path:
+    """Get absolute path to resource, works for dev and PyInstaller bundle."""
+    if getattr(sys, '_MEIPASS', None):
+        base = Path(sys._MEIPASS)
+    else:
+        base = Path(__file__).parent
+    return base / relative_path
+
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -539,7 +551,7 @@ class StupidiscoApp(QMainWindow):
         self.setWindowTitle("stupidisco")
         self.setMinimumSize(320, 460)
         self.resize(340, 560)
-        icon_path = Path(__file__).parent / "icon.png"
+        icon_path = _resource_path("icon.png")
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
         self.setStyleSheet(STYLESHEET)
@@ -942,7 +954,7 @@ def main():
     app.setApplicationName("stupidisco")
 
     # Set app icon
-    icon_path = Path(__file__).parent / "icon.png"
+    icon_path = _resource_path("icon.png")
     if icon_path.exists():
         app.setWindowIcon(QIcon(str(icon_path)))
 

@@ -1,6 +1,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Platform](https://img.shields.io/badge/Platform-macOS-000000?logo=apple&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux-blue)
+![CI](https://github.com/pepperonas/stupidisco/actions/workflows/test.yml/badge.svg)
 ![STT](https://img.shields.io/badge/STT-Deepgram-13EF93?logo=deepgram&logoColor=white)
 ![AI](https://img.shields.io/badge/AI-Claude-d97706?logo=anthropic&logoColor=white)
 ![GUI](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)
@@ -11,7 +12,7 @@
   <img src="screenshot.png" alt="stupidisco Screenshot" width="340">
 </p>
 
-Echtzeit-Interview-Assistent als Overlay für macOS. Erfasst gesprochene Fragen aus Videocalls (Google Meet, Teams, Zoom) per Mikrofon, transkribiert sie live und generiert kompakte deutsche Antworten — angezeigt in einem kleinen Always-on-Top-Overlay-Fenster.
+Echtzeit-Interview-Assistent als Overlay für macOS, Windows und Linux. Erfasst gesprochene Fragen aus Videocalls (Google Meet, Teams, Zoom) per Mikrofon, transkribiert sie live und generiert kompakte deutsche Antworten — angezeigt in einem kleinen Always-on-Top-Overlay-Fenster.
 
 ## Features
 
@@ -26,10 +27,16 @@ Echtzeit-Interview-Assistent als Overlay für macOS. Erfasst gesprochene Fragen 
 - **Session-Logging** — Alle Frage-Antwort-Paare werden in `~/.stupidisco/sessions/` gespeichert
 - **Latenz-Logging** — Misst die Zeit von Stop-Klick bis zur ersten/vollständigen Antwort
 
+## Download
+
+Fertige Binaries fuer macOS, Windows und Linux gibt es auf der [Releases-Seite](https://github.com/pepperonas/stupidisco/releases).
+
+> **Hinweis:** Auch bei Nutzung des fertigen Binaries wird eine `.env`-Datei mit `DEEPGRAM_API_KEY` und `ANTHROPIC_API_KEY` im selben Verzeichnis benoetigt.
+
 ## Voraussetzungen
 
 - Python 3.10+ (getestet mit Python 3.14)
-- macOS (M-Series empfohlen), funktioniert auch unter Windows/Linux
+- macOS, Windows oder Linux
 - [Deepgram API-Key](https://console.deepgram.com/) (kostenlose Stufe mit $200 Guthaben)
 - [Anthropic API-Key](https://console.anthropic.com/)
 
@@ -179,3 +186,7 @@ Die App loggt Latenz-Metriken in die Konsole:
 ## Lizenz
 
 MIT
+
+---
+
+Benannt nach [Stupidisco (Extended Version)](https://www.youtube.com/watch?v=tydF8_645vc) von Junior Jack.

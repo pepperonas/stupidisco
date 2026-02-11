@@ -156,3 +156,38 @@ def test_claude_model_set():
 
     assert stupidisco.CLAUDE_MODEL
     assert len(stupidisco.CLAUDE_MODEL) > 0
+
+
+# ---------------------------------------------------------------------------
+# Version
+# ---------------------------------------------------------------------------
+
+
+def test_version_exists():
+    """__version__ existiert und ist ein nicht-leerer String."""
+    import stupidisco
+
+    assert isinstance(stupidisco.__version__, str)
+    assert len(stupidisco.__version__) > 0
+
+
+def test_version_format():
+    """Version folgt semver x.y.z Format."""
+    import re
+
+    import stupidisco
+
+    assert re.match(r"^\d+\.\d+\.\d+$", stupidisco.__version__)
+
+
+def test_version_matches_pyproject():
+    """Version in stupidisco.py == Version in pyproject.toml."""
+    import re
+
+    import stupidisco
+
+    pyproject_path = Path(__file__).parent / "pyproject.toml"
+    content = pyproject_path.read_text(encoding="utf-8")
+    match = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
+    assert match, "Version nicht in pyproject.toml gefunden"
+    assert stupidisco.__version__ == match.group(1)

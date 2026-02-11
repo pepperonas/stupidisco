@@ -30,6 +30,9 @@ env/
 # Session logs
 sessions/
 
+# PyInstaller
+*.spec
+
 # Distribution
 *.tar.gz
 *.whl
