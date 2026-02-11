@@ -1,26 +1,33 @@
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Platform](https://img.shields.io/badge/Platform-macOS-000000?logo=apple&logoColor=white)
+![STT](https://img.shields.io/badge/STT-Deepgram-13EF93?logo=deepgram&logoColor=white)
+![AI](https://img.shields.io/badge/AI-Claude-d97706?logo=anthropic&logoColor=white)
+![GUI](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)
+
 # stupidisco
 
-Real-time interview assistant overlay for macOS. Captures spoken questions from video calls (Google Meet, Teams, Zoom) via microphone, transcribes them live, and generates compact German answers — displayed in a small always-on-top overlay window.
+Echtzeit-Interview-Assistent als Overlay für macOS. Erfasst gesprochene Fragen aus Videocalls (Google Meet, Teams, Zoom) per Mikrofon, transkribiert sie live und generiert kompakte deutsche Antworten — angezeigt in einem kleinen Always-on-Top-Overlay-Fenster.
 
 ## Features
 
-- **Live Transcription** — Deepgram streaming STT with German language support (nova-3 model)
-- **AI Answers** — Claude generates concise 2-3 sentence answers in German, streamed in real-time
-- **Always-on-Top Overlay** — Dark frameless window, draggable and resizable
-- **Window Controls** — macOS-style traffic light buttons (close, minimize, maximize)
-- **Hotkey Support** — `Cmd+Shift+R` (macOS) / `Ctrl+Shift+R` (Windows/Linux) to toggle recording
-- **Device Selection** — Choose any connected microphone from a dropdown
-- **Copy Button** — One-click copy of the generated answer to clipboard
-- **Regenerate** — Re-generate answer with the same transcript
-- **Session Logging** — All Q&A pairs saved to `~/.stupidisco/sessions/`
-- **Latency Logging** — Measures time from Stop press to first/complete answer
+- **Live-Transkription** — Deepgram Streaming-STT mit deutscher Sprachunterstützung (nova-3 Modell)
+- **KI-Antworten** — Claude generiert prägnante Antworten in 2–3 Sätzen auf Deutsch, in Echtzeit gestreamt
+- **Always-on-Top-Overlay** — Dunkles rahmenloses Fenster, verschieb- und größenveränderbar
+- **Fenstersteuerung** — macOS-Style Traffic-Light-Buttons (Schließen, Minimieren, Maximieren)
+- **Hotkey-Unterstützung** — `Cmd+Shift+R` (macOS) / `Ctrl+Shift+R` (Windows/Linux) zum Umschalten der Aufnahme
+- **Geräteauswahl** — Jedes angeschlossene Mikrofon per Dropdown wählbar
+- **Kopieren-Button** — Generierte Antwort mit einem Klick in die Zwischenablage kopieren
+- **Regenerieren** — Antwort mit demselben Transkript neu generieren
+- **Session-Logging** — Alle Frage-Antwort-Paare werden in `~/.stupidisco/sessions/` gespeichert
+- **Latenz-Logging** — Misst die Zeit von Stop-Klick bis zur ersten/vollständigen Antwort
 
-## Requirements
+## Voraussetzungen
 
-- Python 3.10+ (tested with Python 3.14)
-- macOS (M-series recommended), also works on Windows/Linux
-- [Deepgram API key](https://console.deepgram.com/) (free tier with $200 credit)
-- [Anthropic API key](https://console.anthropic.com/)
+- Python 3.10+ (getestet mit Python 3.14)
+- macOS (M-Series empfohlen), funktioniert auch unter Windows/Linux
+- [Deepgram API-Key](https://console.deepgram.com/) (kostenlose Stufe mit $200 Guthaben)
+- [Anthropic API-Key](https://console.anthropic.com/)
 
 ## Installation
 
@@ -28,139 +35,139 @@ Real-time interview assistant overlay for macOS. Captures spoken questions from 
 git clone https://github.com/pepperonas/stupidisco.git
 cd stupidisco
 
-# Create virtual environment (recommended)
+# Virtuelle Umgebung erstellen (empfohlen)
 python3 -m venv venv
 source venv/bin/activate
 
-# Install dependencies
+# Abhängigkeiten installieren
 pip install -r requirements.txt
 
-# Configure API keys
+# API-Keys konfigurieren
 cp .env.example .env
-# Edit .env and add your keys
+# .env bearbeiten und Keys eintragen
 ```
 
-## Usage
+## Nutzung
 
 ```bash
 python stupidisco.py
 ```
 
-1. Select your microphone from the dropdown (or use the default)
-2. Click the mic button or press `Cmd+Shift+R` to start recording
-3. Speak your question in German
-4. Click again or press the hotkey to stop — the answer streams in within seconds
-5. Use **Copy** to grab the answer, or **Regenerate** for a new one
+1. Mikrofon aus dem Dropdown wählen (oder Standard verwenden)
+2. Mic-Button klicken oder `Cmd+Shift+R` drücken, um die Aufnahme zu starten
+3. Frage auf Deutsch sprechen
+4. Erneut klicken oder Hotkey drücken zum Stoppen — die Antwort streamt innerhalb von Sekunden
+5. **Kopieren** nutzen, um die Antwort zu übernehmen, oder **Regenerieren** für eine neue
 
-> **Tip:** Use a headset microphone to reduce echo from speakers during video calls.
+> **Tipp:** Ein Headset-Mikrofon verwenden, um Echo von Lautsprechern während Videocalls zu reduzieren.
 
-> **macOS:** Grant microphone permission to Terminal/your IDE when prompted on first run.
+> **macOS:** Beim ersten Start Mikrofonberechtigung für Terminal/IDE erteilen, wenn die Abfrage erscheint.
 
-## How It Works
+## Funktionsweise
 
 ```
 ┌─────────────┐     ┌──────────┐     ┌─────────┐
-│  Microphone  │────>│ Deepgram │────>│  Claude  │
-│  (16kHz)     │     │ (STT)    │     │ (Answer) │
+│  Mikrofon    │────>│ Deepgram │────>│  Claude  │
+│  (16kHz)     │     │ (STT)    │     │ (Antwort)│
 └─────────────┘     └──────────┘     └─────────┘
        │                  │                │
        └──── Audio ───────┘                │
-              Chunks         Transcript    │
+              Chunks         Transkript    │
                                 │          │
                           ┌─────v──────────v─────┐
-                          │   PyQt6 Overlay GUI   │
+                          │   PyQt6 Overlay-GUI   │
                           │  (Always-on-Top)      │
                           └───────────────────────┘
 ```
 
-### Architecture
+### Architektur
 
-The app uses a multi-threaded architecture to keep the GUI responsive while handling real-time audio streaming and API calls:
+Die App nutzt eine Multi-Thread-Architektur, um die GUI reaktionsfähig zu halten, während Echtzeit-Audio-Streaming und API-Aufrufe parallel laufen:
 
-- **Main Thread** — PyQt6 event loop, GUI rendering, hotkey handling via pynput
-- **Recording Thread** — Opens Deepgram WebSocket (sync SDK v5), captures audio via `sounddevice`, sends chunks directly to Deepgram via `send_media()`
-- **Listener Thread** — Runs Deepgram's blocking `start_listening()` recv loop, emits transcript signals back to GUI
-- **Async Worker Thread** — Dedicated asyncio event loop for Claude streaming API (`messages.stream()`)
+- **Main Thread** — PyQt6 Event Loop, GUI-Rendering, Hotkey-Handling via pynput
+- **Recording Thread** — Öffnet Deepgram-WebSocket (sync SDK v5), erfasst Audio via `sounddevice`, sendet Chunks direkt an Deepgram via `send_media()`
+- **Listener Thread** — Führt Deepgrams blockierende `start_listening()` Recv-Schleife aus, sendet Transkript-Signale zurück an die GUI
+- **Async Worker Thread** — Dedizierter asyncio Event Loop für Claude Streaming-API (`messages.stream()`)
 
-Communication between threads happens via Qt signals/slots, which are thread-safe.
+Die Kommunikation zwischen Threads erfolgt über Qt Signals/Slots, die thread-sicher sind.
 
-### Threading Model
+### Threading-Modell
 
 ```
 Main Thread (Qt)
-  ├── GUI updates via signals/slots
-  └── Hotkey listener (pynput, daemon thread)
+  ├── GUI-Updates via Signals/Slots
+  └── Hotkey-Listener (pynput, Daemon-Thread)
 
-Recording Thread (per session)
-  ├── Deepgram WebSocket connect (sync)
-  ├── sounddevice audio callback → send_media()
+Recording Thread (pro Session)
+  ├── Deepgram WebSocket Connect (sync)
+  ├── sounddevice Audio-Callback → send_media()
   └── Listener Thread
-       └── socket.start_listening() (blocking recv loop)
+       └── socket.start_listening() (blockierende Recv-Schleife)
 
 Async Worker Thread
-  └── asyncio event loop
-       └── Claude streaming (anthropic SDK)
+  └── asyncio Event Loop
+       └── Claude Streaming (anthropic SDK)
 ```
 
-### Why This Design?
+### Warum dieses Design?
 
-- **Deepgram SDK v5** uses a sync WebSocket API where `start_listening()` blocks. This requires its own thread
-- **sounddevice** runs its audio callback in a PortAudio thread — we send bytes directly to Deepgram from there (no queue overhead)
-- **Claude's Python SDK** is async — it needs an asyncio event loop, which lives in the QThread worker
-- **PyQt6** can only update the GUI from the main thread — signals/slots handle cross-thread communication safely
+- **Deepgram SDK v5** nutzt eine synchrone WebSocket-API, bei der `start_listening()` blockiert. Das erfordert einen eigenen Thread
+- **sounddevice** führt seinen Audio-Callback in einem PortAudio-Thread aus — Bytes werden direkt an Deepgram gesendet (kein Queue-Overhead)
+- **Claudes Python SDK** ist asynchron — es braucht einen asyncio Event Loop, der im QThread-Worker lebt
+- **PyQt6** kann die GUI nur vom Main Thread aus aktualisieren — Signals/Slots übernehmen die thread-sichere Kommunikation
 
 ## GUI
 
-The overlay window features:
+Das Overlay-Fenster bietet:
 
-- **Traffic light buttons** (top-left) — Close (red), Minimize (yellow), Maximize (green)
-- **Resizable** — Drag the bottom-right corner to resize (minimum 320x460)
-- **Draggable** — Drag anywhere else to move the window
-- **Device dropdown** — Select input microphone
-- **Mic button** — Large circular toggle with pulsing red animation during recording
-- **Transcript area** — Live-updating scrollable text showing what Deepgram hears
-- **Answer area** — Green text streaming in token-by-token from Claude
-- **Copy / Regenerate** — Action buttons below the answer
+- **Traffic-Light-Buttons** (oben links) — Schließen (rot), Minimieren (gelb), Maximieren (grün)
+- **Größenveränderbar** — Untere rechte Ecke ziehen zum Vergrößern/Verkleinern (Minimum 320x460)
+- **Verschiebbar** — Überall sonst ziehen, um das Fenster zu bewegen
+- **Geräte-Dropdown** — Eingabemikrofon auswählen
+- **Mic-Button** — Großer runder Toggle mit pulsierender roter Animation während der Aufnahme
+- **Transkript-Bereich** — Live-aktualisierter scrollbarer Text, der zeigt, was Deepgram erkennt
+- **Antwort-Bereich** — Grüner Text, der Token für Token von Claude gestreamt wird
+- **Kopieren / Regenerieren** — Aktionsbuttons unter der Antwort
 
 ## Tech Stack
 
-| Component | Technology |
+| Komponente | Technologie |
 |-----------|-----------|
-| GUI | PyQt6 (dark theme, frameless, resizable) |
-| STT | Deepgram Streaming API (SDK v5, nova-3, German) |
-| AI | Anthropic Claude (claude-3-5-haiku, streaming) |
-| Audio | sounddevice (PortAudio, 16kHz mono int16) |
+| GUI | PyQt6 (Dark Theme, rahmenlos, größenveränderbar) |
+| STT | Deepgram Streaming API (SDK v5, nova-3, Deutsch) |
+| KI | Anthropic Claude (claude-3-5-haiku, Streaming) |
+| Audio | sounddevice (PortAudio, 16kHz Mono int16) |
 | Hotkey | pynput (GlobalHotKeys) |
 | Config | python-dotenv |
 
-## Configuration
+## Konfiguration
 
-All configuration is in `.env`:
+Alle Einstellungen befinden sich in `.env`:
 
 ```bash
-DEEPGRAM_API_KEY=your_deepgram_api_key
-ANTHROPIC_API_KEY=your_anthropic_api_key
+DEEPGRAM_API_KEY=dein_deepgram_api_key
+ANTHROPIC_API_KEY=dein_anthropic_api_key
 ```
 
-The Claude model and system prompt can be changed by editing the constants at the top of `stupidisco.py`:
+Das Claude-Modell und der System-Prompt können durch Bearbeiten der Konstanten am Anfang von `stupidisco.py` geändert werden:
 
-- `CLAUDE_MODEL` — default: `claude-3-5-haiku-20241022`
-- `SYSTEM_PROMPT` — instructions for answer generation
-- `SAMPLE_RATE` — audio sample rate (default: 16000)
-- `CHUNK_MS` — audio chunk size in ms (default: 100)
+- `CLAUDE_MODEL` — Standard: `claude-3-5-haiku-20241022`
+- `SYSTEM_PROMPT` — Anweisungen für die Antwortgenerierung
+- `SAMPLE_RATE` — Audio-Abtastrate (Standard: 16000)
+- `CHUNK_MS` — Audio-Chunk-Größe in ms (Standard: 100)
 
-## Session Logs
+## Session-Logs
 
-All Q&A pairs are automatically saved to `~/.stupidisco/sessions/` in plain text files named by timestamp (e.g. `2025-02-11_23-08.txt`). Each entry includes the question number, timestamp, transcript, and generated answer.
+Alle Frage-Antwort-Paare werden automatisch in `~/.stupidisco/sessions/` als Textdateien gespeichert, benannt nach Zeitstempel (z.B. `2025-02-11_23-08.txt`). Jeder Eintrag enthält Fragennummer, Zeitstempel, Transkript und generierte Antwort.
 
-## Target Latency
+## Ziel-Latenz
 
-< 2-3 seconds from pressing Stop to full answer display.
+< 2–3 Sekunden von Stop-Klick bis zur vollständigen Antwortanzeige.
 
-The app logs latency metrics to the console:
-- Time to first answer chunk
-- Time to complete answer
+Die App loggt Latenz-Metriken in die Konsole:
+- Zeit bis zum ersten Antwort-Chunk
+- Zeit bis zur vollständigen Antwort
 
-## License
+## Lizenz
 
 MIT
