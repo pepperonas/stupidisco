@@ -189,4 +189,6 @@ MIT
 
 ---
 
-Benannt nach [Stupidisco (Extended Version)](https://www.youtube.com/watch?v=tydF8_645vc) von Junior Jack.
+Benannt nach [Stupidisco](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1) von Junior Jack.
+
+[![Stupidisco](https://img.youtube.com/vi/GJfydUI2Hzs/0.jpg)](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1)

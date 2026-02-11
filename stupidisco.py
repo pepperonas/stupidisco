@@ -40,13 +40,16 @@ from PyQt6.QtCore import (
     pyqtSlot,
     QTimer,
     QPoint,
+    QUrl,
 )
-from PyQt6.QtGui import QFont, QIcon, QGuiApplication
+from PyQt6.QtGui import QDesktopServices, QFont, QIcon, QGuiApplication
 from PyQt6.QtWidgets import (
     QApplication,
     QComboBox,
+    QDialog,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QMainWindow,
     QMessageBox,
     QPushButton,
@@ -526,6 +529,188 @@ QPushButton#winbtn_max:hover {
 """
 
 
+class ApiKeyDialog(QDialog):
+    """Modal dialog for entering API keys when .env is missing or incomplete."""
+
+    DIALOG_STYLE = """
+    QDialog {
+        background-color: #1e1e22;
+    }
+    QLabel {
+        color: #e0e0e0;
+        background: transparent;
+    }
+    QLabel#heading {
+        font-size: 15px;
+        font-weight: bold;
+        color: #ffffff;
+    }
+    QLabel#info {
+        font-size: 12px;
+        color: #8a8a8e;
+    }
+    QLabel#section {
+        font-size: 13px;
+        font-weight: bold;
+        color: #c8c8cc;
+    }
+    QLabel#hint {
+        font-size: 11px;
+        color: #8a8a8e;
+    }
+    QLabel#link {
+        font-size: 12px;
+        color: #34c759;
+    }
+    QLabel#link:hover {
+        color: #30d158;
+    }
+    QLineEdit {
+        background-color: rgba(255, 255, 255, 10);
+        color: #e0e0e0;
+        border: 1px solid rgba(255, 255, 255, 20);
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 13px;
+        font-family: monospace;
+    }
+    QLineEdit:focus {
+        border-color: rgba(52, 199, 89, 150);
+    }
+    QPushButton#save {
+        background-color: #34c759;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 20px;
+        font-size: 13px;
+        font-weight: bold;
+    }
+    QPushButton#save:hover {
+        background-color: #30d158;
+    }
+    QPushButton#save:disabled {
+        background-color: rgba(52, 199, 89, 40);
+        color: rgba(255, 255, 255, 40);
+    }
+    QPushButton#cancel {
+        background-color: rgba(255, 255, 255, 10);
+        color: #8a8a8e;
+        border: 1px solid rgba(255, 255, 255, 15);
+        border-radius: 6px;
+        padding: 8px 20px;
+        font-size: 13px;
+    }
+    QPushButton#cancel:hover {
+        background-color: rgba(255, 255, 255, 18);
+        color: #e0e0e0;
+    }
+    """
+
+    def __init__(self, missing: list[str], parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("stupidisco — API Keys")
+        self.setFixedWidth(420)
+        self.setStyleSheet(self.DIALOG_STYLE)
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(6)
+        layout.setContentsMargins(24, 20, 24, 20)
+
+        heading = QLabel("stupidisco — API Keys")
+        heading.setObjectName("heading")
+        layout.addWidget(heading)
+
+        info = QLabel("Für die Nutzung werden zwei API-Keys benötigt:")
+        info.setObjectName("info")
+        layout.addWidget(info)
+        layout.addSpacing(8)
+
+        # --- Deepgram ---
+        dg_label = QLabel("Deepgram API Key")
+        dg_label.setObjectName("section")
+        layout.addWidget(dg_label)
+
+        self.dg_input = QLineEdit()
+        self.dg_input.setEchoMode(QLineEdit.EchoMode.Password)
+        self.dg_input.setPlaceholderText("dg_xxxxxxxxxxxxxxxx")
+        self.dg_input.setText(DEEPGRAM_API_KEY)
+        self.dg_input.textChanged.connect(self._update_save_state)
+        layout.addWidget(self.dg_input)
+
+        dg_link = QLabel('<a href="https://console.deepgram.com" style="color: #34c759; text-decoration: none;">Kostenlos erstellen auf console.deepgram.com</a>')
+        dg_link.setObjectName("link")
+        dg_link.setOpenExternalLinks(True)
+        layout.addWidget(dg_link)
+
+        dg_hint = QLabel("Sign up → Settings → API Keys → Create Key")
+        dg_hint.setObjectName("hint")
+        layout.addWidget(dg_hint)
+        layout.addSpacing(10)
+
+        # --- Anthropic ---
+        ant_label = QLabel("Anthropic API Key")
+        ant_label.setObjectName("section")
+        layout.addWidget(ant_label)
+
+        self.ant_input = QLineEdit()
+        self.ant_input.setEchoMode(QLineEdit.EchoMode.Password)
+        self.ant_input.setPlaceholderText("sk-ant-xxxxxxxxxxxxxxxx")
+        self.ant_input.setText(ANTHROPIC_API_KEY)
+        self.ant_input.textChanged.connect(self._update_save_state)
+        layout.addWidget(self.ant_input)
+
+        ant_link = QLabel('<a href="https://console.anthropic.com" style="color: #34c759; text-decoration: none;">Kostenlos erstellen auf console.anthropic.com</a>')
+        ant_link.setObjectName("link")
+        ant_link.setOpenExternalLinks(True)
+        layout.addWidget(ant_link)
+
+        ant_hint = QLabel("Sign up → API Keys → Create Key")
+        ant_hint.setObjectName("hint")
+        layout.addWidget(ant_hint)
+        layout.addSpacing(16)
+
+        # --- Buttons ---
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(10)
+
+        self.cancel_btn = QPushButton("Abbrechen")
+        self.cancel_btn.setObjectName("cancel")
+        self.cancel_btn.clicked.connect(self.reject)
+        btn_layout.addWidget(self.cancel_btn)
+
+        btn_layout.addStretch()
+
+        self.save_btn = QPushButton("Speichern")
+        self.save_btn.setObjectName("save")
+        self.save_btn.clicked.connect(self.accept)
+        btn_layout.addWidget(self.save_btn)
+
+        layout.addLayout(btn_layout)
+
+        self._update_save_state()
+
+    def _update_save_state(self):
+        self.save_btn.setEnabled(
+            bool(self.dg_input.text().strip()) and bool(self.ant_input.text().strip())
+        )
+
+    def save_env(self):
+        """Write the entered keys to .env file."""
+        env_path = _resource_path(".env")
+        lines = []
+        # Preserve existing .env content (non-key lines)
+        if env_path.exists():
+            for line in env_path.read_text().splitlines():
+                stripped = line.strip()
+                if stripped.startswith("DEEPGRAM_API_KEY=") or stripped.startswith("ANTHROPIC_API_KEY="):
+                    continue
+                lines.append(line)
+        lines.append(f"DEEPGRAM_API_KEY={self.dg_input.text().strip()}")
+        lines.append(f"ANTHROPIC_API_KEY={self.ant_input.text().strip()}")
+        env_path.write_text("\n".join(lines) + "\n")
+
+
 class StupidiscoApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -960,15 +1145,23 @@ def main():
 
     missing = validate_env()
     if missing:
-        QMessageBox.critical(
-            None,
-            "stupidisco — Missing API Keys",
-            "Missing environment variables:\n\n"
-            + "\n".join(f"  - {k}" for k in missing)
-            + "\n\nCreate a .env file with your API keys.\n"
-            "See .env.example for details.",
-        )
-        sys.exit(1)
+        global DEEPGRAM_API_KEY, ANTHROPIC_API_KEY
+        dialog = ApiKeyDialog(missing)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            sys.exit(0)
+        dialog.save_env()
+        load_dotenv(override=True)
+        DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY", "")
+        ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+        still_missing = validate_env()
+        if still_missing:
+            QMessageBox.critical(
+                None,
+                "stupidisco — API Keys ungültig",
+                "Keys konnten nicht gespeichert werden:\n\n"
+                + "\n".join(f"  - {k}" for k in still_missing),
+            )
+            sys.exit(1)
 
     window = StupidiscoApp()
     window.show()
