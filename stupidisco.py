@@ -82,6 +82,10 @@ log = logging.getLogger("stupidisco")
 # Environment
 # ---------------------------------------------------------------------------
 load_dotenv()
+# Also check ~/.stupidisco/.env (written by API key dialog, works in .app bundles)
+_user_env = Path.home() / ".stupidisco" / ".env"
+if _user_env.exists():
+    load_dotenv(_user_env)
 
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
@@ -696,8 +700,11 @@ class ApiKeyDialog(QDialog):
         )
 
     def save_env(self):
-        """Write the entered keys to .env file."""
-        env_path = _resource_path(".env")
+        """Write the entered keys to ~/.stupidisco/.env."""
+        config_dir = Path.home() / ".stupidisco"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        env_path = config_dir / ".env"
+        self.env_path = env_path
         lines = []
         # Preserve existing .env content (non-key lines)
         if env_path.exists():
@@ -1150,7 +1157,8 @@ def main():
         if dialog.exec() != QDialog.DialogCode.Accepted:
             sys.exit(0)
         dialog.save_env()
-        load_dotenv(override=True)
+        env_file = dialog.env_path
+        load_dotenv(dotenv_path=env_file, override=True)
         DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY", "")
         ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
         still_missing = validate_env()
