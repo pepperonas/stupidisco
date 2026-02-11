@@ -1,0 +1,44 @@
+You are an expert Python developer for real-time AI tools. Build a complete, standalone Python app called "stupidisco" for macOS (M1/M-series preferred) and make it cross-platform (Windows/Linux) where practical. The app captures spoken questions from a Google Meet (MS Teams, Zoom, or similar) call, transcribes them live, and generates compact German answers super fast.
+
+Key constraints:
+- MacBook Pro M1/M2/M3, limited free storage → NO large local models, prefer cloud APIs
+- Goal: < 2–3 seconds from pressing Stop (end of question) to full answer display
+- Language: German questions + German answers
+- Only manual trigger: Start/Stop button or hotkey (no auto-detection)
+- Audio capture: use MICROPHONE input (default system input device). Do NOT require system audio capture or virtual loopback drivers.
+  - The design should still allow selecting an input device from a dropdown (e.g., external mic), but the default should be the OS default mic.
+  - Mention that using a headset mic reduces echo; mic capture may include room noise/overlap, so be robust.
+
+Stack priorities for SPEED + low storage:
+- STT: Deepgram streaming API (real-time websocket, sub-500ms latency, excellent German). Use the official Python SDK.
+  - Provide a brief fallback note: AssemblyAI streaming as an alternative if the user prefers.
+- Answer AI: Anthropic Claude (claude-3-5-sonnet-20241022 or newer) with streaming responses.
+  - System prompt:
+    "Du bist ein extrem präziser, eloquenter Interview-Partner. Du erhältst ein Live-Transkript (Mikrofonaufnahme) mit möglichen Fragmenten/Echo. Extrahiere die zuletzt gestellte relevante Frage und beantworte sie auf Deutsch kompakt in maximal 2–3 Sätzen. Sei direkt, klar und faktenbasiert. Keine Vorrede, keine Meta-Kommentare."
+- GUI: PyQt6 – modern dark theme, always-on-top semi-transparent small overlay window (~300×400 px):
+  • Big circular toggle button (mic icon, red when recording)
+  • Live transcription preview (scrolling text, updating every partial)
+  • Answer area below (streaming text appears gradually with subtle animation)
+  • Status label (Recording..., Transcribing..., Thinking...)
+  • Hotkey: Cmd+Shift+R on macOS, Ctrl+Shift+R on Windows/Linux to toggle start/stop
+- Use asyncio for concurrent audio capture, Deepgram websocket streaming, Claude streaming
+- Load API keys from .env (DEEPGRAM_API_KEY, ANTHROPIC_API_KEY)
+- Error handling + logging to console
+- Minimal dependencies → keep install light
+
+Flow:
+1. User clicks Start → capture microphone audio in small chunks (low-latency)
+2. Stream audio chunks live to Deepgram → receive partial + final transcripts → show live in GUI
+3. User clicks Stop → send final transcript to Claude → stream answer to GUI
+4. Ready for next question immediately (clear transcript/answer on next Start)
+
+Include at top:
+- requirements.txt list (PyQt6, sounddevice, numpy, python-dotenv, anthropic, deepgram-sdk, pynput, etc.)
+- Setup instructions comment block:
+  - Create .env with keys
+  - On macOS grant microphone permission
+  - Tip: use headset mic to reduce echo
+
+Output the full code as a single file named stupidisco.py – ready to run with:
+  python stupidisco.py
+Make the GUI intuitive and visually appealing.

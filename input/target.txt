@@ -1,0 +1,22 @@
+hier ein beispiel WIE(!!!) die ki antworten soll - es geht NICHT(!!) um chemielabor - es geht hierbei nur um die struktur, länge, präzesion der antworten - in JEDEM fachbereich / disziplin. 
+
+1. Beschreiben Sie ein komplexes chemisches Problem aus Ihrer bisherigen Arbeit und wie Sie es systematisch gelöst haben.
+„In einem Projekt zur Methodenentwicklung hatten wir stark schwankende HPLC-Ergebnisse. Ich habe zunächst mögliche Einflussfaktoren systematisch isoliert — Probenvorbereitung, Säulenalterung, Eluentenzusammensetzung und Gerätekalibrierung. Über Vergleichsmessungen und eine Ursachenanalyse stellte sich heraus, dass eine geringfügige pH-Abweichung im Puffer die Retentionszeit beeinflusste. Nach Anpassung der SOP und zusätzlicher Pufferkontrolle konnten wir die Methode stabil validieren.“
+
+2. Wie stellen Sie die Einhaltung von Qualitäts- und Regulatorik-Standards sicher?
+„Durch klare SOP-Strukturen, regelmäßige Schulungen, interne Audits und konsequente Dokumentation. Validierungen, Gerätekalibrierungen und Change-Control-Prozesse werden zentral überwacht. Wichtig ist mir, dass Qualität Teil der täglichen Routine ist und nicht nur für Audits vorbereitet wird.“
+
+3. Wie priorisieren Sie Projekte und Ressourcen, wenn mehrere dringende Anforderungen gleichzeitig auftreten?
+„Ich priorisiere anhand von Sicherheitsrelevanz, regulatorischen Verpflichtungen, wirtschaftlichem Impact und Zeitkritikalität. Entscheidungen mache ich transparent gegenüber Stakeholdern und überprüfe die Planung regelmäßig. Wenn nötig, verteile ich Aufgaben um oder priorisiere neu.“
+
+4. Wie gehen Sie mit wiederkehrenden Fehlern oder Leistungsproblemen eines Teammitglieds um?
+„Zuerst kläre ich die Ursache im persönlichen Gespräch — z. B. unklare Prozesse, Trainingsbedarf oder Überlastung. Danach vereinbaren wir konkrete Verbesserungsmaßnahmen und überprüfen diese regelmäßig. Ziel ist nachhaltige Verbesserung, nicht Schuldzuweisung.“
+
+5. Was sind Ihre typischen Schritte, wenn Messergebnisse nicht plausibel oder reproduzierbar sind?
+„Ich prüfe zuerst Messkette und Dokumentation: Kalibrierung, Referenzstandards, Probenhandling, Gerätezustand. Danach folgen Kontrollmessungen und ggf. eine unabhängige Methode. Erst wenn Messfehler ausgeschlossen sind, hinterfrage ich das zugrunde liegende Modell oder den Prozess.“
+
+6. Welche Kennzahlen würden Sie nutzen, um die Leistung und Effizienz eines Labors zu bewerten?
+„Typische KPIs sind Durchlaufzeit von Analysen, First-Pass-Yield bzw. Fehlerrate, Geräteauslastung, Kosten pro Analyse, Termintreue sowie Sicherheitskennzahlen. Wichtig ist eine Kombination aus Qualitäts-, Effizienz- und Sicherheitsindikatoren.“
+
+7. Wie fördern Sie Sicherheitsbewusstsein im Labor?
+„Durch regelmäßige Sicherheitsschulungen, klare Betriebsanweisungen, Gefährdungsbeurteilungen und eine offene Meldestruktur für Beinahe-Unfälle. Führungskräfte müssen Sicherheitsregeln konsequent vorleben. Sicherheit ist Teil der Leistungskultur.“

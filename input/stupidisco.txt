@@ -1,0 +1,16 @@
+Echtzeit-Frage-Antwort-Tool für Google Meet
+
+Stack:
+
+Python + Whisper API (oder faster-whisper lokal) für Speech-to-Text
+Claude API / GPT API für die Antwort
+Systemaudio-Capture via pulseaudio (Linux) oder BlackHole/VB-Cable (Mac/Win)
+Tkinter oder PyQt für ein minimales Overlay mit Start/Stop-Button
+
+Flow:
+
+Button drücken → Audio-Aufnahme vom System-Audio (Google Meet Output)
+Parallel: Während aufgenommen wird, bereits chunks an Whisper streamen (Streaming-Transkription)
+Button erneut drücken → Aufnahme stoppen, letzten Text finalisieren
+Transkript → Claude API mit System-Prompt (z.B. "Beantworte diese Interview-Frage kompakt in 2-3 Sätzen")
+Antwort in einem kleinen Overlay-Fenster anzeigen
