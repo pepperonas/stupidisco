@@ -22,6 +22,7 @@ import asyncio
 import logging
 import os
 import sys
+import threading
 import time
 from datetime import datetime
 from pathlib import Path
@@ -129,9 +130,10 @@ class AsyncWorker(QObject):
     def __init__(self):
         super().__init__()
         self._loop: asyncio.AbstractEventLoop | None = None
-        self._audio_queue: asyncio.Queue | None = None
         self._stream: sd.RawInputStream | None = None
-        self._dg_connection = None
+        self._dg_socket = None
+        self._dg_ctx = None
+        self._dg_thread: threading.Thread | None = None
         self._recording = False
         self._accumulated_transcript = ""
         self._last_transcript = ""
@@ -143,7 +145,6 @@ class AsyncWorker(QObject):
         """Called when the QThread starts. Creates and runs the asyncio loop."""
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
-        self._audio_queue = asyncio.Queue()
         log.info("AsyncWorker event loop running")
         self._loop.run_forever()
 
@@ -155,41 +156,27 @@ class AsyncWorker(QObject):
     # -- Recording control ---------------------------------------------------
 
     def start_recording(self, device_index: int | None):
-        self.schedule(self._start_recording(device_index))
-
-    def stop_recording(self):
-        self.schedule(self._stop_recording())
-
-    def regenerate(self):
-        if self._last_transcript:
-            self.schedule(self._generate_answer(self._last_transcript))
-
-    async def _start_recording(self, device_index: int | None):
+        """Start recording — runs Deepgram connect in a thread (it blocks)."""
         if self._recording:
             return
         self._recording = True
         self._accumulated_transcript = ""
         self.status_changed.emit("Recording...")
 
-        try:
-            await self._open_deepgram()
-            self._open_audio_stream(device_index)
-            # Pump audio to Deepgram
-            asyncio.ensure_future(self._audio_pump(), loop=self._loop)
-        except Exception as e:
-            log.exception("Failed to start recording")
-            self.error_occurred.emit(f"Recording error: {e}")
-            self._recording = False
-            self.status_changed.emit("Ready")
+        self._dg_thread = threading.Thread(
+            target=self._recording_thread, args=(device_index,), daemon=True
+        )
+        self._dg_thread.start()
 
-    async def _stop_recording(self):
+    def stop_recording(self):
+        """Signal stop and generate answer."""
         if not self._recording:
             return
         self._recording = False
         self._stop_time = time.time()
         self.status_changed.emit("Thinking...")
 
-        # Stop audio
+        # Stop audio stream
         if self._stream:
             try:
                 self._stream.stop()
@@ -198,17 +185,126 @@ class AsyncWorker(QObject):
                 pass
             self._stream = None
 
-        # Finalize Deepgram
-        if self._dg_connection:
+    def regenerate(self):
+        if self._last_transcript:
+            self.schedule(self._generate_answer(self._last_transcript))
+
+    # -- Recording thread (Deepgram is sync, runs here) ---------------------
+
+    def _recording_thread(self, device_index: int | None):
+        """Runs in a dedicated thread: opens Deepgram WS, captures audio, sends it."""
+        from deepgram import DeepgramClient
+        from deepgram.core.events import EventType
+
+        try:
+            dg = DeepgramClient(api_key=DEEPGRAM_API_KEY)
+            ctx = dg.listen.v1.connect(
+                model="nova-3",
+                language="de",
+                encoding="linear16",
+                sample_rate=str(SAMPLE_RATE),
+                channels=str(CHANNELS),
+                interim_results="true",
+                smart_format="true",
+            )
+
+            socket = ctx.__enter__()
+            self._dg_socket = socket
+            self._dg_ctx = ctx
+
+            def on_message(message):
+                try:
+                    if not hasattr(message, "channel"):
+                        return
+                    alt = message.channel.alternatives[0]
+                    text = alt.transcript
+                    if not text:
+                        return
+                    is_final = getattr(message, "is_final", False)
+                    if is_final:
+                        self._accumulated_transcript += text + " "
+                        self.transcript_final.emit(
+                            self._accumulated_transcript.strip()
+                        )
+                    else:
+                        partial = self._accumulated_transcript + text
+                        self.transcript_partial.emit(partial.strip())
+                except Exception as e:
+                    log.warning(f"Transcript parse error: {e}")
+
+            def on_error(error):
+                log.error(f"Deepgram error: {error}")
+                self.error_occurred.emit(f"Deepgram: {error}")
+
+            socket.on(EventType.MESSAGE, on_message)
+            socket.on(EventType.ERROR, on_error)
+
+            # Open audio FIRST — callback sends directly to Deepgram socket
+            def audio_callback(indata, frames, time_info, status):
+                if status:
+                    log.warning(f"Audio status: {status}")
+                if self._recording and self._dg_socket:
+                    try:
+                        self._dg_socket.send_media(bytes(indata))
+                    except Exception:
+                        pass
+
+            kwargs = dict(
+                samplerate=SAMPLE_RATE,
+                blocksize=CHUNK_SIZE,
+                dtype=DTYPE,
+                channels=CHANNELS,
+                callback=audio_callback,
+            )
+            if device_index is not None:
+                kwargs["device"] = device_index
+
+            self._stream = sd.RawInputStream(**kwargs)
+            self._stream.start()
+            log.info(f"Audio stream opened (device={device_index})")
+
+            # start_listening() blocks — it reads WS messages in a loop.
+            # It will exit when the WS is closed (on stop).
+            # Run it in yet another thread so we can still send audio.
+            listen_thread = threading.Thread(
+                target=self._listen_loop, args=(socket,), daemon=True
+            )
+            listen_thread.start()
+            log.info("Deepgram connection opened, listening for transcripts")
+
+            # Wait until recording stops
+            while self._recording:
+                time.sleep(0.05)
+
+            # Stop audio
+            if self._stream:
+                try:
+                    self._stream.stop()
+                    self._stream.close()
+                except Exception:
+                    pass
+                self._stream = None
+
+            # Close Deepgram websocket
             try:
-                self._dg_connection.finish()
+                ctx.__exit__(None, None, None)
             except Exception:
                 pass
-            self._dg_connection = None
+            self._dg_socket = None
+            self._dg_ctx = None
 
-        # Wait briefly for any final transcript callbacks
-        await asyncio.sleep(0.3)
+            listen_thread.join(timeout=3)
+            log.info("Deepgram connection closed")
 
+        except Exception as e:
+            log.exception("Recording thread error")
+            self.error_occurred.emit(f"Recording error: {e}")
+            self._recording = False
+            self.status_changed.emit("Ready")
+            return
+
+        # Now generate answer
+        time.sleep(0.3)  # Brief wait for final transcript callbacks
         transcript = self._accumulated_transcript.strip()
         if not transcript:
             self.status_changed.emit("Ready")
@@ -217,87 +313,15 @@ class AsyncWorker(QObject):
 
         self._last_transcript = transcript
         self.transcript_final.emit(transcript)
-        await self._generate_answer(transcript)
+        self.schedule(self._generate_answer(transcript))
 
-    # -- Deepgram -----------------------------------------------------------
-
-    async def _open_deepgram(self):
-        from deepgram import DeepgramClient, LiveOptions, LiveTranscriptionEvents
-
-        dg = DeepgramClient(DEEPGRAM_API_KEY)
-        connection = dg.listen.websocket.v("1")
-
-        def on_transcript(_, result, **kwargs):
-            try:
-                alt = result.channel.alternatives[0]
-                text = alt.transcript
-                if not text:
-                    return
-                if result.is_final:
-                    self._accumulated_transcript += text + " "
-                    self.transcript_final.emit(self._accumulated_transcript.strip())
-                else:
-                    partial = self._accumulated_transcript + text
-                    self.transcript_partial.emit(partial.strip())
-            except Exception as e:
-                log.warning(f"Transcript parse error: {e}")
-
-        def on_error(_, error, **kwargs):
-            log.error(f"Deepgram error: {error}")
-            self.error_occurred.emit(f"Deepgram: {error}")
-
-        connection.on(LiveTranscriptionEvents.Transcript, on_transcript)
-        connection.on(LiveTranscriptionEvents.Error, on_error)
-
-        options = LiveOptions(
-            model="nova-3",
-            language="de",
-            encoding="linear16",
-            sample_rate=SAMPLE_RATE,
-            channels=CHANNELS,
-            interim_results=True,
-            smart_format=True,
-        )
-        connection.start(options)
-        self._dg_connection = connection
-        log.info("Deepgram connection opened")
-
-    # -- Audio stream -------------------------------------------------------
-
-    def _open_audio_stream(self, device_index: int | None):
-        def callback(indata, frames, time_info, status):
-            if status:
-                log.warning(f"Audio status: {status}")
-            if self._recording and self._loop:
-                data = bytes(indata)
-                self._loop.call_soon_threadsafe(self._audio_queue.put_nowait, data)
-
-        kwargs = dict(
-            samplerate=SAMPLE_RATE,
-            blocksize=CHUNK_SIZE,
-            dtype=DTYPE,
-            channels=CHANNELS,
-            callback=callback,
-        )
-        if device_index is not None:
-            kwargs["device"] = device_index
-
-        self._stream = sd.RawInputStream(**kwargs)
-        self._stream.start()
-        log.info(f"Audio stream opened (device={device_index})")
-
-    async def _audio_pump(self):
-        """Reads audio from queue and sends to Deepgram."""
-        while self._recording and self._dg_connection:
-            try:
-                data = await asyncio.wait_for(self._audio_queue.get(), timeout=0.2)
-                self._dg_connection.send(data)
-            except asyncio.TimeoutError:
-                continue
-            except Exception as e:
-                if self._recording:
-                    log.warning(f"Audio pump error: {e}")
-                break
+    def _listen_loop(self, socket):
+        """Blocking Deepgram message receive loop — runs in its own thread."""
+        try:
+            socket.start_listening()
+        except Exception as e:
+            if self._recording:
+                log.warning(f"Deepgram listen loop ended: {e}")
 
     # -- Claude -------------------------------------------------------------
 
@@ -343,19 +367,20 @@ class AsyncWorker(QObject):
     # -- Cleanup ------------------------------------------------------------
 
     def shutdown(self):
-        if self._recording:
-            self._recording = False
-            if self._stream:
-                try:
-                    self._stream.stop()
-                    self._stream.close()
-                except Exception:
-                    pass
-            if self._dg_connection:
-                try:
-                    self._dg_connection.finish()
-                except Exception:
-                    pass
+        self._recording = False
+        if self._stream:
+            try:
+                self._stream.stop()
+                self._stream.close()
+            except Exception:
+                pass
+        if self._dg_ctx:
+            try:
+                self._dg_ctx.__exit__(None, None, None)
+            except Exception:
+                pass
+        if self._dg_thread and self._dg_thread.is_alive():
+            self._dg_thread.join(timeout=2)
         if self._loop:
             self._loop.call_soon_threadsafe(self._loop.stop)
 
@@ -366,8 +391,8 @@ class AsyncWorker(QObject):
 
 STYLESHEET = """
 QMainWindow {
-    background-color: rgba(24, 24, 28, 230);
-    border: 1px solid rgba(255, 255, 255, 30);
+    background-color: #18181c;
+    border: 1px solid #333338;
     border-radius: 12px;
 }
 QWidget#central {
@@ -479,15 +504,16 @@ class StupidiscoApp(QMainWindow):
     def _init_ui(self):
         self.setWindowTitle("stupidisco")
         self.setFixedSize(320, 460)
+        icon_path = Path(__file__).parent / "icon.png"
+        if icon_path.exists():
+            self.setWindowIcon(QIcon(str(icon_path)))
         self.setStyleSheet(STYLESHEET)
 
-        # Frameless, translucent, always-on-top
+        # Frameless, always-on-top
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
-            | Qt.WindowType.Tool
         )
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         central = QWidget()
         central.setObjectName("central")
@@ -811,6 +837,11 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName("stupidisco")
 
+    # Set app icon
+    icon_path = Path(__file__).parent / "icon.png"
+    if icon_path.exists():
+        app.setWindowIcon(QIcon(str(icon_path)))
+
     missing = validate_env()
     if missing:
         QMessageBox.critical(
@@ -825,6 +856,8 @@ def main():
 
     window = StupidiscoApp()
     window.show()
+    window.raise_()
+    window.activateWindow()
 
     sys.exit(app.exec())
 

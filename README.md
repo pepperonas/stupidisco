@@ -6,7 +6,7 @@ Real-time interview assistant overlay for macOS. Captures spoken questions from 
 
 - **Live Transcription** — Deepgram streaming STT with German language support (nova-3 model)
 - **AI Answers** — Claude generates concise 2-3 sentence answers in German, streamed in real-time
-- **Always-on-Top Overlay** — Dark, semi-transparent frameless window (~320x460px), draggable
+- **Always-on-Top Overlay** — Dark frameless window (~320x460px), draggable anywhere on screen
 - **Hotkey Support** — `Cmd+Shift+R` (macOS) / `Ctrl+Shift+R` (Windows/Linux) to toggle recording
 - **Device Selection** — Choose any connected microphone from a dropdown
 - **Copy Button** — One-click copy of the generated answer to clipboard
@@ -16,9 +16,9 @@ Real-time interview assistant overlay for macOS. Captures spoken questions from 
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.10+ (tested with Python 3.14)
 - macOS (M-series recommended), also works on Windows/Linux
-- [Deepgram API key](https://console.deepgram.com/) (free tier available)
+- [Deepgram API key](https://console.deepgram.com/) (free tier with $200 credit)
 - [Anthropic API key](https://console.anthropic.com/)
 
 ## Installation
@@ -53,6 +53,8 @@ python stupidisco.py
 
 > **Tip:** Use a headset microphone to reduce echo from speakers during video calls.
 
+> **macOS:** Grant microphone permission to Terminal/your IDE when prompted on first run.
+
 ## How It Works
 
 ```
@@ -72,18 +74,35 @@ python stupidisco.py
 
 ### Architecture
 
-- **Main Thread** — PyQt6 event loop, GUI updates, hotkey handling
-- **Worker Thread** — Dedicated asyncio event loop running:
-  - `sounddevice` audio capture (16kHz, mono, int16)
-  - Deepgram WebSocket streaming (partial + final transcripts)
-  - Claude API streaming (answer generation)
+- **Main Thread** — PyQt6 event loop, GUI rendering, hotkey handling
+- **Recording Thread** — Opens Deepgram WebSocket, captures audio via `sounddevice`, sends chunks directly to Deepgram
+- **Listener Thread** — Receives Deepgram transcript messages (blocking WebSocket read loop)
+- **Async Worker Thread** — Dedicated asyncio event loop for Claude streaming API
 - Communication between threads via Qt signals/slots
+
+### Threading Model
+
+```
+Main Thread (Qt)
+  ├── GUI updates via signals/slots
+  └── Hotkey listener (pynput, daemon thread)
+
+Recording Thread (per session)
+  ├── Deepgram WebSocket connect (sync)
+  ├── sounddevice audio callback → send_media()
+  └── Listener Thread
+       └── socket.start_listening() (blocking recv loop)
+
+Async Worker Thread
+  └── asyncio event loop
+       └── Claude streaming (anthropic SDK)
+```
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|-----------|
-| GUI | PyQt6 (dark theme, frameless, translucent) |
+| GUI | PyQt6 (dark theme, frameless) |
 | STT | Deepgram Streaming API (nova-3, German) |
 | AI | Anthropic Claude (claude-3-5-haiku) |
 | Audio | sounddevice (PortAudio) |
