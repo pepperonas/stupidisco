@@ -75,9 +75,15 @@ CLAUDE_MODEL = "claude-3-5-haiku-20241022"
 SYSTEM_PROMPT = (
     "Du bist ein extrem präziser, eloquenter Interview-Partner. "
     "Du erhältst ein Live-Transkript (Mikrofonaufnahme) mit möglichen "
-    "Fragmenten/Echo. Extrahiere die zuletzt gestellte relevante Frage "
-    "und beantworte sie auf Deutsch kompakt in maximal 2–3 Sätzen. "
-    "Sei direkt, klar und faktenbasiert. Keine Vorrede, keine Meta-Kommentare."
+    "Fragmenten, Tippfehlern oder Echo. "
+    "Extrahiere die gestellte Frage und beantworte sie auf Deutsch "
+    "kompakt in maximal 2–3 Sätzen. "
+    "Sei direkt, klar und faktenbasiert. Keine Vorrede, keine Meta-Kommentare. "
+    "WICHTIG: Antworte IMMER inhaltlich — auch wenn das Transkript "
+    "unvollständig oder fragmentiert ist. Interpretiere bestmöglich, "
+    "was gemeint sein könnte, und gib eine hilfreiche Antwort. "
+    "Sage NIEMALS, dass du nicht antworten kannst oder dass das "
+    "Transkript unklar ist. Antworte einfach."
 )
 
 # Audio settings
@@ -481,6 +487,30 @@ QPushButton#action:disabled {
     color: #48484a;
     background-color: rgba(255, 255, 255, 5);
 }
+QPushButton#winbtn_close {
+    background-color: #ff5f57;
+    border: none;
+    border-radius: 7px;
+}
+QPushButton#winbtn_close:hover {
+    background-color: #ff3b30;
+}
+QPushButton#winbtn_min {
+    background-color: #febc2e;
+    border: none;
+    border-radius: 7px;
+}
+QPushButton#winbtn_min:hover {
+    background-color: #f0a000;
+}
+QPushButton#winbtn_max {
+    background-color: #28c840;
+    border: none;
+    border-radius: 7px;
+}
+QPushButton#winbtn_max:hover {
+    background-color: #20a835;
+}
 """
 
 
@@ -489,10 +519,14 @@ class StupidiscoApp(QMainWindow):
         super().__init__()
         self._recording = False
         self._drag_pos: QPoint | None = None
+        self._resizing = False
+        self._resize_origin = None
+        self._resize_size = None
         self._last_answer = ""
         self._last_transcript = ""
         self._pulse_on = False
         self._session_logger = SessionLogger()
+        self._normal_geometry = None
 
         self._init_ui()
         self._init_worker()
@@ -503,11 +537,14 @@ class StupidiscoApp(QMainWindow):
 
     def _init_ui(self):
         self.setWindowTitle("stupidisco")
-        self.setFixedSize(320, 460)
+        self.setMinimumSize(320, 460)
+        self.resize(340, 560)
         icon_path = Path(__file__).parent / "icon.png"
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
         self.setStyleSheet(STYLESHEET)
+
+        self.setMouseTracking(True)
 
         # Frameless, always-on-top
         self.setWindowFlags(
@@ -522,13 +559,37 @@ class StupidiscoApp(QMainWindow):
         layout.setContentsMargins(14, 12, 14, 12)
         layout.setSpacing(8)
 
-        # Title bar
+        # Title bar with window controls
         title_row = QHBoxLayout()
+        title_row.setSpacing(6)
         title = QLabel("stupidisco")
         title.setObjectName("title")
         self._status_label = QLabel("Ready")
         self._status_label.setObjectName("status")
-        self._status_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+
+        # macOS-style traffic light buttons
+        btn_close = QPushButton("")
+        btn_close.setObjectName("winbtn_close")
+        btn_close.setFixedSize(14, 14)
+        btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_close.clicked.connect(self.close)
+
+        btn_min = QPushButton("")
+        btn_min.setObjectName("winbtn_min")
+        btn_min.setFixedSize(14, 14)
+        btn_min.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_min.clicked.connect(self.showMinimized)
+
+        btn_max = QPushButton("")
+        btn_max.setObjectName("winbtn_max")
+        btn_max.setFixedSize(14, 14)
+        btn_max.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_max.clicked.connect(self._toggle_maximize)
+
+        title_row.addWidget(btn_close)
+        title_row.addWidget(btn_min)
+        title_row.addWidget(btn_max)
+        title_row.addSpacing(6)
         title_row.addWidget(title)
         title_row.addStretch()
         title_row.addWidget(self._status_label)
@@ -567,7 +628,7 @@ class StupidiscoApp(QMainWindow):
         t_scroll = QScrollArea()
         t_scroll.setWidgetResizable(True)
         t_scroll.setWidget(self._transcript_label)
-        t_scroll.setMaximumHeight(90)
+        t_scroll.setMaximumHeight(100)
         t_scroll.setStyleSheet(
             "QScrollArea { border: none; background: transparent; }"
             "QScrollBar:vertical { width: 4px; background: transparent; }"
@@ -592,7 +653,7 @@ class StupidiscoApp(QMainWindow):
         a_scroll = QScrollArea()
         a_scroll.setWidgetResizable(True)
         a_scroll.setWidget(self._answer_label)
-        a_scroll.setMaximumHeight(120)
+        a_scroll.setMinimumHeight(120)
         a_scroll.setStyleSheet(
             "QScrollArea { border: none; background: transparent; }"
             "QScrollBar:vertical { width: 4px; background: transparent; }"
@@ -619,7 +680,12 @@ class StupidiscoApp(QMainWindow):
         action_row.addWidget(self._regen_btn)
         layout.addLayout(action_row)
 
+        # Resize grip hint
+        grip = QLabel("\u25e2")
+        grip.setStyleSheet("color: rgba(255,255,255,20); font-size: 14px;")
+        grip.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
         layout.addStretch()
+        layout.addWidget(grip)
 
         # Position at right side of screen
         screen = QGuiApplication.primaryScreen()
@@ -787,18 +853,56 @@ class StupidiscoApp(QMainWindow):
         self._answer_label.setText("")
         self._worker.regenerate()
 
-    # -- Dragging -----------------------------------------------------------
+    # -- Window controls ----------------------------------------------------
+
+    def _toggle_maximize(self):
+        if self._normal_geometry:
+            self.setGeometry(self._normal_geometry)
+            self._normal_geometry = None
+        else:
+            self._normal_geometry = self.geometry()
+            screen = QGuiApplication.primaryScreen()
+            if screen:
+                self.setGeometry(screen.availableGeometry())
+
+    # -- Dragging + Resizing ------------------------------------------------
+
+    _RESIZE_MARGIN = 10  # px from bottom-right corner
+
+    def _in_resize_zone(self, pos):
+        return (
+            pos.x() >= self.width() - self._RESIZE_MARGIN
+            and pos.y() >= self.height() - self._RESIZE_MARGIN
+        )
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
-            self._drag_pos = event.globalPosition().toPoint() - self.pos()
+            if self._in_resize_zone(event.position().toPoint()):
+                self._resizing = True
+                self._resize_origin = event.globalPosition().toPoint()
+                self._resize_size = self.size()
+            else:
+                self._drag_pos = event.globalPosition().toPoint() - self.pos()
 
     def mouseMoveEvent(self, event):
-        if self._drag_pos and event.buttons() & Qt.MouseButton.LeftButton:
+        if not (event.buttons() & Qt.MouseButton.LeftButton):
+            # Update cursor when hovering
+            if self._in_resize_zone(event.position().toPoint()):
+                self.setCursor(Qt.CursorShape.SizeFDiagCursor)
+            else:
+                self.setCursor(Qt.CursorShape.ArrowCursor)
+            return
+        if getattr(self, "_resizing", False):
+            delta = event.globalPosition().toPoint() - self._resize_origin
+            new_w = max(self.minimumWidth(), self._resize_size.width() + delta.x())
+            new_h = max(self.minimumHeight(), self._resize_size.height() + delta.y())
+            self.resize(new_w, new_h)
+        elif self._drag_pos:
             self.move(event.globalPosition().toPoint() - self._drag_pos)
 
     def mouseReleaseEvent(self, event):
         self._drag_pos = None
+        self._resizing = False
 
     # -- Cleanup ------------------------------------------------------------
 
