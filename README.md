@@ -12,7 +12,7 @@
   <img src="screenshot.png" alt="stupidisco Screenshot" width="340">
 </p>
 
-**[Deutsch](#deutsch)** | **[English](#english)**
+[![Deutsch](https://img.shields.io/badge/Sprache-Deutsch-blue)](#deutsch) [![English](https://img.shields.io/badge/Language-English-blue)](#english)
 
 ---
 
