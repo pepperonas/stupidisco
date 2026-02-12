@@ -125,7 +125,8 @@ Weitere Konstanten in `stupidisco.py`:
 | Konstante | Standard | Beschreibung |
 |-----------|---------|-------------|
 | `CLAUDE_MODEL` | `claude-sonnet-4-5-20250929` | Claude-Modell für Antworten |
-| `SYSTEM_PROMPT` | *(inline)* | Anweisungen für die Antwortgenerierung |
+| `SYSTEM_PROMPT` | *(inline)* | Senior-Dev Interview-Persona, strukturierte Stichpunkt-Antworten |
+| `MAX_TOKENS` | `600` | Maximale Antwortlänge (Token) |
 | `SAMPLE_RATE` | `16000` | Audio-Abtastrate in Hz |
 | `CHUNK_MS` | `100` | Audio-Chunk-Größe in Millisekunden |
 

@@ -125,7 +125,8 @@ Additional constants in `stupidisco.py`:
 | Constant | Default | Description |
 |----------|---------|-------------|
 | `CLAUDE_MODEL` | `claude-sonnet-4-5-20250929` | Claude model for answers |
-| `SYSTEM_PROMPT` | *(inline)* | Instructions for answer generation |
+| `SYSTEM_PROMPT` | *(inline)* | Senior dev interview persona, structured bullet-point answers |
+| `MAX_TOKENS` | `600` | Maximum answer length (tokens) |
 | `SAMPLE_RATE` | `16000` | Audio sample rate in Hz |
 | `CHUNK_MS` | `100` | Audio chunk size in milliseconds |
 
