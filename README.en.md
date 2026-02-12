@@ -2,7 +2,7 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux-blue)
 ![CI](https://github.com/pepperonas/stupidisco/actions/workflows/test.yml/badge.svg)
-![Release](https://github.com/pepperonas/stupidisco/actions/workflows/release.yml/badge.svg)
+[![Release](https://img.shields.io/github/v/release/pepperonas/stupidisco?color=blue&label=Release)](https://github.com/pepperonas/stupidisco/releases/latest)
 ![STT](https://img.shields.io/badge/STT-Deepgram-13EF93?logo=deepgram&logoColor=white)
 ![AI](https://img.shields.io/badge/AI-Claude-d97706?logo=anthropic&logoColor=white)
 ![GUI](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)
