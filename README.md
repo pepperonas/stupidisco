@@ -300,9 +300,13 @@ MIT
 
 ---
 
-<p align="center">
-  Named after / Benannt nach <a href="https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1">Stupidisco</a> by Junior Jack
-</p>
+## Why "stupidisco"? / Warum "stupidisco"?
+
+> **stupidisco** — from Italian *stupire* (to astonish). *"Stupidisco"* is the first person singular: **"I astonish"**, **"I amaze"**, **"I astound"**.
+>
+> **stupidisco** — aus dem Italienischen *stupire* (erstaunen). *„Stupidisco"* ist die erste Person Singular: **„ich überrasche"**, **„ich erstaune"**, **„ich verblüffe"**.
+
+Also inspired by [Stupidisco](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1) by Junior Jack.
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1">
