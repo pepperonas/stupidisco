@@ -30,8 +30,7 @@ env/
 # Session logs
 sessions/
 
-# PyInstaller
-*.spec
+# PyInstaller (keep stupidisco.spec for macOS .app builds)
 
 # Distribution
 *.tar.gz
