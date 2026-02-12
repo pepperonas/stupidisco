@@ -131,6 +131,59 @@ Weitere Konstanten in `stupidisco.py`:
 | `SAMPLE_RATE` | `16000` | Audio-Abtastrate in Hz |
 | `CHUNK_MS` | `100` | Audio-Chunk-Größe in Millisekunden |
 
+### Architektur
+
+<table>
+<tr><td>
+
+**Threading-Modell**
+
+```
+Main Thread (Qt)
+  ├── GUI-Rendering
+  ├── Signal/Slot-Dispatch
+  └── Hotkey-Listener
+       └── NSEvent (macOS)
+       └── pynput (Win/Linux)
+
+Recording Thread
+  ├── Deepgram WS Connect
+  ├── sounddevice Callback
+  │   └── send_media()
+  └── Listener Thread
+       └── start_listening()
+
+Async Worker (QThread)
+  └── asyncio Event Loop
+       └── Claude Streaming
+```
+
+</td><td>
+
+**Tech Stack**
+
+| Komponente | Technologie |
+|-----------|-----------|
+| GUI | PyQt6 |
+| STT | Deepgram SDK v5 (nova-3) |
+| KI | Anthropic Claude (haiku) |
+| Audio | sounddevice / PortAudio |
+| Hotkey | NSEvent / pynput |
+| Config | python-dotenv |
+| Build | PyInstaller |
+| CI/CD | GitHub Actions |
+
+</td></tr>
+</table>
+
+**Ziel-Latenz:** < 2–3 Sekunden von Stop-Klick bis zur vollständigen Antwortanzeige.
+
+### Warum "stupidisco"?
+
+> **stupidisco** — aus dem Italienischen *stupire* (erstaunen, verblüffen). *„Stupidisco"* ist die erste Person Singular: **„ich überrasche"**, **„ich erstaune"**, **„ich verblüffe"**.
+
+Inspiriert von [Stupidisco](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1) von Junior Jack.
+
 ---
 
 ## <img src="https://flagcdn.com/24x18/gb.png" alt="EN" width="20"> English
@@ -239,44 +292,42 @@ Additional constants in `stupidisco.py`:
 | `SAMPLE_RATE` | `16000` | Audio sample rate in Hz |
 | `CHUNK_MS` | `100` | Audio chunk size in milliseconds |
 
----
-
-## Architektur / Architecture
+### Architecture
 
 <table>
 <tr><td>
 
-**Threading-Modell / Threading Model**
+**Threading Model**
 
 ```
 Main Thread (Qt)
-  ├── GUI-Rendering
-  ├── Signal/Slot-Dispatch
-  └── Hotkey-Listener
+  ├── GUI rendering
+  ├── Signal/Slot dispatch
+  └── Hotkey listener
        └── NSEvent (macOS)
        └── pynput (Win/Linux)
 
 Recording Thread
-  ├── Deepgram WS Connect
-  ├── sounddevice Callback
+  ├── Deepgram WS connect
+  ├── sounddevice callback
   │   └── send_media()
   └── Listener Thread
        └── start_listening()
 
 Async Worker (QThread)
-  └── asyncio Event Loop
-       └── Claude Streaming
+  └── asyncio event loop
+       └── Claude streaming
 ```
 
 </td><td>
 
 **Tech Stack**
 
-| Komponente / Component | Technologie / Technology |
+| Component | Technology |
 |-----------|-----------|
 | GUI | PyQt6 |
 | STT | Deepgram SDK v5 (nova-3) |
-| KI / AI | Anthropic Claude (haiku) |
+| AI | Anthropic Claude (haiku) |
 | Audio | sounddevice / PortAudio |
 | Hotkey | NSEvent / pynput |
 | Config | python-dotenv |
@@ -286,28 +337,23 @@ Async Worker (QThread)
 </td></tr>
 </table>
 
-### Ziel-Latenz / Target Latency
+**Target latency:** < 2–3 seconds from stop click to full answer display.
 
-< 2–3 Sekunden von Stop-Klick bis zur vollständigen Antwortanzeige.
-< 2–3 seconds from stop click to full answer display.
+### Why "stupidisco"?
 
-## Entwickler / Developer
+> **stupidisco** — from Italian *stupire* (to astonish, to amaze). *"Stupidisco"* is the first person singular: **"I astonish"**, **"I amaze"**, **"I astound"**.
 
-**Martin Pfeffer** — [celox.io](https://celox.io)
-
-## Lizenz / License
-
-MIT
+Inspired by [Stupidisco](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1) by Junior Jack.
 
 ---
 
-## Warum "stupidisco"? / Why "stupidisco"?
+## Developer
 
-> **stupidisco** — aus dem Italienischen *stupire* (erstaunen, verblüffen). *„Stupidisco"* ist die erste Person Singular: **„ich überrasche"**, **„ich erstaune"**, **„ich verblüffe"**.
->
-> **stupidisco** — from Italian *stupire* (to astonish, to amaze). *"Stupidisco"* is the first person singular: **"I astonish"**, **"I amaze"**, **"I astound"**.
+**Martin Pfeffer** — [celox.io](https://celox.io)
 
-Inspiriert von / Also inspired by [Stupidisco](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1) von / by Junior Jack.
+## License
+
+MIT
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1">
