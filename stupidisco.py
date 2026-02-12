@@ -18,7 +18,7 @@ Setup:
     3. Tip: Use a headset mic to reduce echo from speakers
 """
 
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 
 import asyncio
 import logging
