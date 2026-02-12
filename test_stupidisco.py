@@ -147,7 +147,7 @@ def test_system_prompt_content():
     prompt = stupidisco.SYSTEM_PROMPT
     assert "Deutsch" in prompt
     assert "Antwort" in prompt or "antworte" in prompt or "Antworte" in prompt
-    assert "WICHTIG" in prompt
+    assert "IMMER" in prompt
 
 
 def test_claude_model_set():
