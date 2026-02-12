@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stupidisco"
-version = "0.0.3"
+version = "0.0.4"
 description = "Real-time interview assistant overlay — live transcription with Deepgram, AI answers with Claude"
 readme = "README.md"
 license = {text = "MIT"}
