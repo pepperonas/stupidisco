@@ -5,14 +5,14 @@
 ![STT](https://img.shields.io/badge/STT-Deepgram-13EF93?logo=deepgram&logoColor=white)
 ![AI](https://img.shields.io/badge/AI-Claude-d97706?logo=anthropic&logoColor=white)
 ![GUI](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)
+[![Deutsch](https://img.shields.io/badge/Sprache-Deutsch-blue)](#deutsch)
+[![English](https://img.shields.io/badge/Language-English-blue)](#english)
 
 # stupidisco
 
 <p align="center">
   <img src="screenshot.png" alt="stupidisco Screenshot" width="340">
 </p>
-
-[![Deutsch](https://img.shields.io/badge/Sprache-Deutsch-blue)](#deutsch) [![English](https://img.shields.io/badge/Language-English-blue)](#english)
 
 ---
 
