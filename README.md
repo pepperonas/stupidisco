@@ -29,6 +29,8 @@
 
 Echtzeit-Interview-Assistent als Overlay für macOS, Windows und Linux. Erfasst gesprochene Fragen aus Videocalls (Google Meet, Teams, Zoom) per Mikrofon, transkribiert sie live und generiert kompakte deutsche Antworten — angezeigt in einem kleinen Always-on-Top-Overlay-Fenster.
 
+**Dein unfairer Vorteil im Vorstellungsgespräch.** Jede Frage wird live transkribiert und von KI in Echtzeit beantwortet — unsichtbar für dein Gegenüber. Aus jedem Anfänger wird ein Experte.
+
 ### Features
 
 | Feature | Beschreibung |
@@ -189,6 +191,8 @@ Inspiriert von [Stupidisco](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDG
 ## <img src="https://flagcdn.com/24x18/gb.png" alt="EN" width="20"> English
 
 Real-time interview assistant overlay for macOS, Windows and Linux. Captures spoken questions from video calls (Google Meet, Teams, Zoom) via microphone, transcribes them live and generates compact German answers — displayed in a small always-on-top overlay window.
+
+**Your unfair advantage in job interviews.** Every question is transcribed live and answered by AI in real time — invisible to your interviewer. Any amateur becomes an expert.
 
 ### Features
 
