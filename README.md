@@ -241,42 +241,42 @@ Additional constants in `stupidisco.py`:
 
 ---
 
-## Architecture
+## Architektur / Architecture
 
 <table>
 <tr><td>
 
-**Threading Model**
+**Threading-Modell / Threading Model**
 
 ```
 Main Thread (Qt)
-  ├── GUI rendering
-  ├── Signal/Slot dispatch
-  └── Hotkey listener
+  ├── GUI-Rendering
+  ├── Signal/Slot-Dispatch
+  └── Hotkey-Listener
        └── NSEvent (macOS)
        └── pynput (Win/Linux)
 
 Recording Thread
-  ├── Deepgram WS connect
-  ├── sounddevice callback
+  ├── Deepgram WS Connect
+  ├── sounddevice Callback
   │   └── send_media()
   └── Listener Thread
        └── start_listening()
 
 Async Worker (QThread)
-  └── asyncio event loop
-       └── Claude streaming
+  └── asyncio Event Loop
+       └── Claude Streaming
 ```
 
 </td><td>
 
 **Tech Stack**
 
-| Component | Technology |
+| Komponente / Component | Technologie / Technology |
 |-----------|-----------|
 | GUI | PyQt6 |
 | STT | Deepgram SDK v5 (nova-3) |
-| AI | Anthropic Claude (haiku) |
+| KI / AI | Anthropic Claude (haiku) |
 | Audio | sounddevice / PortAudio |
 | Hotkey | NSEvent / pynput |
 | Config | python-dotenv |
@@ -286,27 +286,28 @@ Async Worker (QThread)
 </td></tr>
 </table>
 
-### Target Latency / Ziel-Latenz
+### Ziel-Latenz / Target Latency
 
+< 2–3 Sekunden von Stop-Klick bis zur vollständigen Antwortanzeige.
 < 2–3 seconds from stop click to full answer display.
 
-## Developer
+## Entwickler / Developer
 
 **Martin Pfeffer** — [celox.io](https://celox.io)
 
-## License / Lizenz
+## Lizenz / License
 
 MIT
 
 ---
 
-## Why "stupidisco"? / Warum "stupidisco"?
+## Warum "stupidisco"? / Why "stupidisco"?
 
-> **stupidisco** — from Italian *stupire* (to astonish). *"Stupidisco"* is the first person singular: **"I astonish"**, **"I amaze"**, **"I astound"**.
+> **stupidisco** — aus dem Italienischen *stupire* (erstaunen, verblüffen). *„Stupidisco"* ist die erste Person Singular: **„ich überrasche"**, **„ich erstaune"**, **„ich verblüffe"**.
 >
-> **stupidisco** — aus dem Italienischen *stupire* (erstaunen). *„Stupidisco"* ist die erste Person Singular: **„ich überrasche"**, **„ich erstaune"**, **„ich verblüffe"**.
+> **stupidisco** — from Italian *stupire* (to astonish, to amaze). *"Stupidisco"* is the first person singular: **"I astonish"**, **"I amaze"**, **"I astound"**.
 
-Also inspired by [Stupidisco](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1) by Junior Jack.
+Inspiriert von / Also inspired by [Stupidisco](https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1) von / by Junior Jack.
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=GJfydUI2Hzs&list=RDGJfydUI2Hzs&start_radio=1">
