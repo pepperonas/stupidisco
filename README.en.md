@@ -124,7 +124,7 @@ Additional constants in `stupidisco.py`:
 
 | Constant | Default | Description |
 |----------|---------|-------------|
-| `CLAUDE_MODEL` | `claude-3-5-haiku-20241022` | Claude model for answers |
+| `CLAUDE_MODEL` | `claude-sonnet-4-5-20250929` | Claude model for answers |
 | `SYSTEM_PROMPT` | *(inline)* | Instructions for answer generation |
 | `SAMPLE_RATE` | `16000` | Audio sample rate in Hz |
 | `CHUNK_MS` | `100` | Audio chunk size in milliseconds |
@@ -164,7 +164,7 @@ Async Worker (QThread)
 |-----------|-----------|
 | GUI | PyQt6 |
 | STT | Deepgram SDK v5 (nova-3) |
-| AI | Anthropic Claude (haiku) |
+| AI | Anthropic Claude (Sonnet 4.5) |
 | Audio | sounddevice / PortAudio |
 | Hotkey | NSEvent / pynput |
 | Config | python-dotenv |

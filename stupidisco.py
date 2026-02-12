@@ -90,7 +90,7 @@ if _user_env.exists():
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
-CLAUDE_MODEL = "claude-3-5-haiku-20241022"
+CLAUDE_MODEL = "claude-sonnet-4-5-20250929"
 SYSTEM_PROMPT = (
     "Du bist ein extrem präziser, eloquenter Interview-Partner. "
     "Du erhältst ein Live-Transkript (Mikrofonaufnahme) mit möglichen "

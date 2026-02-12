@@ -13,7 +13,7 @@ Target latency: < 2-3 seconds from pressing Stop to full answer display.
 - **Language:** Python 3.10+ (tested with 3.14), single-file app: `stupidisco.py`
 - **GUI:** PyQt6 — dark theme, frameless always-on-top overlay, resizable (~340x560px default)
 - **STT:** Deepgram SDK v5 — WebSocket streaming, nova-3 model, German language
-- **Answer AI:** Anthropic Claude (`claude-3-5-haiku-20241022`) with streaming responses
+- **Answer AI:** Anthropic Claude (`claude-sonnet-4-5-20250929`) with streaming responses
 - **Audio:** `sounddevice` for microphone capture (16kHz, mono, int16, 100ms chunks)
 - **Threading:** Multi-threaded (Qt main thread + recording thread + Deepgram listener thread + asyncio worker thread)
 - **Config:** `.env` file or `~/.stupidisco/.env` for API keys (`DEEPGRAM_API_KEY`, `ANTHROPIC_API_KEY`)
