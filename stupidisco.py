@@ -18,7 +18,7 @@ Setup:
     3. Tip: Use a headset mic to reduce echo from speakers
 """
 
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 
 import asyncio
 import logging
@@ -844,7 +844,7 @@ class StupidiscoApp(QMainWindow):
         t_scroll = QScrollArea()
         t_scroll.setWidgetResizable(True)
         t_scroll.setWidget(self._transcript_label)
-        t_scroll.setMaximumHeight(100)
+        t_scroll.setMaximumHeight(60)
         t_scroll.setStyleSheet(
             "QScrollArea { border: none; background: transparent; }"
             "QScrollBar:vertical { width: 4px; background: transparent; }"
@@ -869,14 +869,14 @@ class StupidiscoApp(QMainWindow):
         a_scroll = QScrollArea()
         a_scroll.setWidgetResizable(True)
         a_scroll.setWidget(self._answer_label)
-        a_scroll.setMinimumHeight(120)
+        a_scroll.setMinimumHeight(180)
         a_scroll.setStyleSheet(
             "QScrollArea { border: none; background: transparent; }"
             "QScrollBar:vertical { width: 4px; background: transparent; }"
             "QScrollBar::handle:vertical { background: rgba(255,255,255,30); border-radius: 2px; }"
             "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }"
         )
-        layout.addWidget(a_scroll)
+        layout.addWidget(a_scroll, 1)  # stretch factor 1 → answer gets all extra space
 
         # Action buttons
         action_row = QHBoxLayout()
@@ -897,7 +897,6 @@ class StupidiscoApp(QMainWindow):
         layout.addLayout(action_row)
 
         # Footer: version + link + resize grip
-        layout.addStretch()
         footer_row = QHBoxLayout()
         footer_row.setContentsMargins(0, 0, 0, 0)
         footer_row.setSpacing(6)
