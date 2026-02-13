@@ -48,10 +48,10 @@ app = BUNDLE(
     name='stupidisco.app',
     icon='icon.icns',
     bundle_identifier='io.celox.stupidisco',
-    version='0.0.6',
+    version='0.0.8',
     info_plist={
         'NSMicrophoneUsageDescription': 'stupidisco benötigt Mikrofonzugriff für die Live-Transkription von Interview-Fragen.',
         'NSHighResolutionCapable': True,
-        'CFBundleShortVersionString': '0.0.6',
+        'CFBundleShortVersionString': '0.0.8',
     },
 )

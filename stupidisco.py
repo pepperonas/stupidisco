@@ -18,11 +18,12 @@ Setup:
     3. Tip: Use a headset mic to reduce echo from speakers
 """
 
-__version__ = "0.0.6"
+__version__ = "0.0.8"
 
 import asyncio
 import logging
 import os
+import re
 import sys
 import threading
 import time
@@ -54,6 +55,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
+    QTextBrowser,
     QVBoxLayout,
     QWidget,
 )
@@ -423,6 +425,78 @@ class AsyncWorker(QObject):
 
 
 # ---------------------------------------------------------------------------
+# Lightweight Markdown → HTML conversion (no external dependency)
+# ---------------------------------------------------------------------------
+
+
+def _markdown_to_html(text: str) -> str:
+    """Convert common Markdown patterns to HTML for QTextBrowser display."""
+    if not text:
+        return ""
+
+    # Escape HTML entities first
+    text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    # Fenced code blocks: ```...```
+    def _code_block(m):
+        code = m.group(1).strip("\n")
+        return (
+            '<pre style="background-color: rgba(255,255,255,15); '
+            "padding: 6px; border-radius: 4px; font-family: monospace; "
+            'font-size: 12px; white-space: pre-wrap;">'
+            f"{code}</pre>"
+        )
+
+    text = re.sub(r"```(?:\w*)\n?(.*?)```", _code_block, text, flags=re.DOTALL)
+
+    # Inline code: `code`
+    text = re.sub(
+        r"`([^`]+)`",
+        r'<code style="background-color: rgba(255,255,255,15); '
+        r"padding: 1px 4px; border-radius: 3px; font-family: monospace; "
+        r'font-size: 12px;">\1</code>',
+        text,
+    )
+
+    # Bold: **text**
+    text = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
+
+    # Italic: *text* (but not inside bold markers)
+    text = re.sub(r"\*(.+?)\*", r"<i>\1</i>", text)
+
+    # Bullet lists: lines starting with - or • or *
+    lines = text.split("\n")
+    result = []
+    in_list = False
+    for line in lines:
+        stripped = line.strip()
+        if re.match(r"^[-•\*]\s+", stripped):
+            if not in_list:
+                result.append("<ul style='margin: 2px 0; padding-left: 18px;'>")
+                in_list = True
+            item = re.sub(r"^[-•\*]\s+", "", stripped)
+            result.append(f"<li>{item}</li>")
+        else:
+            if in_list:
+                result.append("</ul>")
+                in_list = False
+            result.append(line)
+    if in_list:
+        result.append("</ul>")
+
+    text = "\n".join(result)
+
+    # Line breaks (but not inside <pre> or <ul> blocks)
+    parts = re.split(r"(<pre.*?</pre>|<ul.*?</ul>)", text, flags=re.DOTALL)
+    for i, part in enumerate(parts):
+        if not part.startswith(("<pre", "<ul")):
+            parts[i] = part.replace("\n", "<br>")
+    text = "".join(parts)
+
+    return text
+
+
+# ---------------------------------------------------------------------------
 # Main Window — PyQt6 GUI
 # ---------------------------------------------------------------------------
 
@@ -461,12 +535,13 @@ QLabel#transcript {
     background-color: rgba(255, 255, 255, 8);
     border-radius: 6px;
 }
-QLabel#answer {
+QTextBrowser#answer {
     font-size: 13px;
     color: #34c759;
     padding: 6px;
     background-color: rgba(52, 199, 89, 10);
     border-radius: 6px;
+    border: none;
 }
 QComboBox {
     background-color: rgba(255, 255, 255, 12);
@@ -858,25 +933,17 @@ class StupidiscoApp(QMainWindow):
         a_label.setObjectName("section")
         layout.addWidget(a_label)
 
-        self._answer_label = QLabel("")
-        self._answer_label.setObjectName("answer")
-        self._answer_label.setWordWrap(True)
-        self._answer_label.setMinimumHeight(60)
-        self._answer_label.setAlignment(
-            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
-        )
-
-        a_scroll = QScrollArea()
-        a_scroll.setWidgetResizable(True)
-        a_scroll.setWidget(self._answer_label)
-        a_scroll.setMinimumHeight(180)
-        a_scroll.setStyleSheet(
-            "QScrollArea { border: none; background: transparent; }"
+        self._answer_browser = QTextBrowser()
+        self._answer_browser.setObjectName("answer")
+        self._answer_browser.setReadOnly(True)
+        self._answer_browser.setOpenExternalLinks(False)
+        self._answer_browser.setMinimumHeight(180)
+        self._answer_browser.setStyleSheet(
             "QScrollBar:vertical { width: 4px; background: transparent; }"
             "QScrollBar::handle:vertical { background: rgba(255,255,255,30); border-radius: 2px; }"
             "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }"
         )
-        layout.addWidget(a_scroll, 1)  # stretch factor 1 → answer gets all extra space
+        layout.addWidget(self._answer_browser, 1)
 
         # Action buttons
         action_row = QHBoxLayout()
@@ -1049,7 +1116,7 @@ class StupidiscoApp(QMainWindow):
         self._copy_btn.setEnabled(False)
         self._regen_btn.setEnabled(False)
         self._transcript_label.setText("")
-        self._answer_label.setText("")
+        self._answer_browser.setHtml("")
 
         device = self._device_combo.currentData()
         self._worker.start_recording(device)
@@ -1077,8 +1144,10 @@ class StupidiscoApp(QMainWindow):
 
     @pyqtSlot(str)
     def _on_answer_chunk(self, text: str):
-        self._answer_label.setText(text)
-        self._last_answer = text
+        sb = self._answer_browser.verticalScrollBar()
+        pos = sb.value()
+        self._answer_browser.setHtml(_markdown_to_html(text))
+        sb.setValue(pos)
 
     @pyqtSlot()
     def _on_answer_done(self):
@@ -1111,7 +1180,7 @@ class StupidiscoApp(QMainWindow):
     def _regenerate(self):
         self._regen_btn.setEnabled(False)
         self._copy_btn.setEnabled(False)
-        self._answer_label.setText("")
+        self._answer_browser.setHtml("")
         self._worker.regenerate()
 
     # -- Window controls ----------------------------------------------------
